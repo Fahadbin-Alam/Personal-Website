@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fahadbin Alam — Résumé Quest</title>
+<meta name="description" content="Fahadbin Alam's résumé as a small pixel town you can walk around — or parachute into. U.S. Army veteran (82nd Airborne), Drexel CS student, builder.">
+<meta name="theme-color" content="#0d1226">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fahadbin Alam — Résumé Quest">
+<meta property="og:description" content="A résumé you can play: walk around a small pixel town, or parachute in. U.S. Army veteran (82nd Airborne), Drexel CS student, builder.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230d1226'/%3E%3Cpath d='M8 2l4 5-4 7-4-7z' fill='%234878d8' stroke='%23fff' stroke-width='.8' stroke-linejoin='round'/%3E%3Cpath d='M8 2l4 5H4z' fill='%2390b8f8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#0d1226;overflow:hidden;font-family:'Pixelify Sans',ui-monospace,'Courier New',monospace;-webkit-tap-highlight-color:transparent;color:#fff}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;touch-action:none}
+button,input{font-family:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+:focus-visible{outline:.18em solid #f0a030;outline-offset:.1em}
+#wrap{position:relative;width:960px;height:640px;overflow:hidden;border-radius:6px;background:#000;box-shadow:0 0 0 3px #181820,0 0 0 6px #343848,0 24px 70px rgba(0,0,0,.6);font-size:16px;flex-shrink:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.smooth canvas{image-rendering:auto}
+
+/* ===== dialogue box ===== */
+#dlg{display:none;position:absolute;left:1.5%;right:1.5%;bottom:2%;min-height:27%;background:#f8f8f8;border:.22em solid #383848;border-radius:.45em;padding:.9em 1.3em;z-index:50;cursor:pointer;box-shadow:inset 0 0 0 .32em #78a8d8,inset 0 0 0 .5em #c8e0f8,inset 0 0 0 .62em #f8f8f8;color:#484848;outline:none}
+#dlg-name{position:absolute;top:-1.75em;left:.8em;background:#f8f8f8;color:#484848;font-weight:700;font-size:.95em;padding:.25em .9em;border:.22em solid #383848;border-radius:.35em;box-shadow:inset 0 0 0 .25em #78a8d8;text-shadow:.08em .08em 0 #d0d0c8}
+#dlg-text{font-size:1.4em;font-weight:500;line-height:1.5;white-space:pre-wrap;padding:.15em .2em 0;color:#484848;text-shadow:.07em .07em 0 #d0d0c8}
+#dlg-arrow{position:absolute;right:1.3em;bottom:.8em;width:0;height:0;border-left:.5em solid transparent;border-right:.5em solid transparent;border-top:.7em solid #e03040;animation:bob .6s ease-in-out infinite alternate;display:none}
+@keyframes bob{to{transform:translateY(.25em)}}
+
+/* ===== menu ===== */
+#menu{display:none;position:absolute;right:1.5%;top:2.5%;z-index:55;background:#f8f8f8;border:.22em solid #383848;border-radius:.45em;padding:.6em .4em;box-shadow:inset 0 0 0 .32em #78a8d8,inset 0 0 0 .5em #c8e0f8;min-width:36%}
+.mi{display:flex;align-items:center;gap:.4em;width:100%;padding:.36em .9em;font-family:inherit;font-weight:600;font-size:1.3em;color:#484848;background:none;border:0;cursor:pointer;text-align:left;text-decoration:none;text-shadow:.07em .07em 0 #d0d0c8}
+.mi::before{content:'▶';font-size:.7em;opacity:0;width:1em}
+.mi:hover::before,.mi:focus-visible::before{opacity:1}
+.mi:focus-visible{outline:none;background:#fff8c8}
+
+/* ===== location popup · top-right HUD · parachute read-out ===== */
+#loc{position:absolute;left:2%;top:2.5%;z-index:45;background:#f8f0d8;border:.22em solid #383028;border-radius:.3em;padding:.35em 1.1em;font-size:1.25em;font-weight:600;color:#484040;text-shadow:.07em .07em 0 #d8c8a0;box-shadow:inset 0 0 0 .25em #c89050,inset 0 0 0 .38em #f8f0d8;transform:translateY(-240%);transition:transform .3s steps(5);pointer-events:none}
+#loc.show{transform:none}
+#hud{display:none;position:absolute;right:2%;top:2.5%;z-index:44;gap:.4em;align-items:stretch}
+#hud.on{display:flex}
+.menuopen #hud{visibility:hidden}                /* the menu sits in the same corner */
+.hb{display:flex;align-items:center;justify-content:center;gap:.35em;height:2.3em;min-width:2.3em;padding:0 .65em;font-family:inherit;font-size:1.05em;font-weight:700;line-height:1;border:.18em solid #383848;border-radius:.4em;background:#f8f8f8;color:#484848;box-shadow:inset 0 0 0 .2em #78a8d8;white-space:nowrap}
+button.hb{cursor:pointer}
+.hb.cta{background:#e05048;color:#fff;letter-spacing:.05em;box-shadow:inset 0 -.25em 0 rgba(0,0,0,.2),inset 0 .15em 0 rgba(255,255,255,.25);text-shadow:.08em .08em 0 rgba(0,0,0,.4)}
+#prog b{color:#8858c8}#prog i{font-style:normal}
+#dn{padding:0;font-size:1.15em}
+.touch .hb{min-height:34px;font-size:13px}
+.touch #dn{min-width:34px;font-size:18px}
+#jhud{display:none;position:absolute;left:50%;bottom:3.5%;transform:translateX(-50%);z-index:46;background:rgba(16,24,56,.88);color:#fff;border:.16em solid #f8f8f8;border-radius:.4em;padding:.3em .9em;font-size:1.05em;font-weight:600;white-space:nowrap;letter-spacing:.03em;pointer-events:none}
+#jhud.on{display:block}
+.touch #jhud{font-size:12.5px}
+
+/* ===== panels ===== */
+.panel{display:none;position:absolute;inset:0;z-index:60;flex-direction:column;overflow:hidden;color:#404040;background-color:#d8e8f8;background-image:linear-gradient(45deg,#c4d8f0 25%,transparent 25%,transparent 75%,#c4d8f0 75%),linear-gradient(45deg,#c4d8f0 25%,transparent 25%,transparent 75%,#c4d8f0 75%);background-size:1.2em 1.2em;background-position:0 0,.6em .6em}
+.touch .panel{position:fixed;font-size:14px}
+.ph{padding:.65em 1.2em;display:flex;justify-content:space-between;align-items:center;gap:.6em;font-weight:700;font-size:1.25em;color:#fff;background:#e05048;border-bottom:.22em solid #383848;text-shadow:.08em .08em 0 rgba(0,0,0,.45);box-shadow:inset 0 -.3em 0 rgba(0,0,0,.2),inset 0 .2em 0 rgba(255,255,255,.25)}
+.ph.blue{background:#4878d8}.ph.green{background:#38a860}.ph.gold{background:#e0a030}.ph.purple{background:#8858c8}.ph.navy{background:#405890}
+.ph small{font-size:.72em;background:rgba(0,0,0,.25);padding:.15em .6em;border-radius:.2em;white-space:nowrap}
+.pb{flex:1;overflow-y:auto;padding:.9em 1.2em 1.2em;display:flex;flex-direction:column;gap:.7em;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.img{width:100%;flex-shrink:0;border:.22em solid #383848;border-radius:.35em;overflow:hidden}.img svg{display:block;width:100%;height:auto;border-radius:0!important}
+.pb::-webkit-scrollbar{width:.6em}.pb::-webkit-scrollbar-thumb{background:#383848}
+.card{background:#f8f8f8;border:.2em solid #383848;border-radius:.4em;padding:.75em 1em;box-shadow:inset 0 0 0 .22em #a8c8f0;color:#404040;flex-shrink:0}
+.card.row{display:flex;align-items:center;gap:1em}
+.card a{color:#2a58c0}
+.ico{width:4.2em;height:4.2em;border-radius:.7em;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:.2em solid #383848;box-shadow:inset 0 0 0 .22em rgba(255,255,255,.5),inset 0 -.55em 0 rgba(0,0,0,.14)}
+.ico span{font-size:2em;line-height:1}
+.t1{font-size:1.45em;font-weight:700;margin-bottom:.2em;color:#383838;text-shadow:.07em .07em 0 #d0d0c8}
+.t2{font-size:1em;font-weight:500;color:#606060;line-height:1.5}
+.flavor{font-size:1.1em;font-weight:500;line-height:1.5;text-shadow:.06em .06em 0 #e0e0d8}
+.type{display:inline-block;font-size:.8em;font-weight:700;padding:.05em .6em;border:.15em solid #383848;border-radius:.25em;color:#fff;margin-right:.5em;text-shadow:.07em .07em 0 rgba(0,0,0,.4)}
+.bars{display:flex;flex-direction:column;gap:.5em}
+.br{display:flex;align-items:center;gap:.8em;font-size:1em;font-weight:700;color:#484848}
+.br b{width:6em;flex-shrink:0}
+.bg{flex:1;height:.8em;background:#505060;border:.15em solid #383848;border-radius:.2em;overflow:hidden}
+.bf{height:100%;width:0;transition:width .9s steps(12)}
+.br i{width:2.2em;text-align:right;font-style:normal}
+.btn{display:flex;align-items:center;justify-content:center;gap:.5em;width:100%;font-family:inherit;font-size:1.2em;font-weight:700;padding:.6em;text-decoration:none;text-align:center;border:.2em solid #383848;border-radius:.4em;cursor:pointer;color:#fff;background:#4878d8;box-shadow:inset 0 -.3em 0 rgba(0,0,0,.22),inset 0 .2em 0 rgba(255,255,255,.25);text-shadow:.08em .08em 0 rgba(0,0,0,.45);flex-shrink:0}
+.btn:active{transform:translateY(.15em)}
+.nb{white-space:nowrap}
+.btn.red{background:#e05048}.btn.green{background:#38a860}.btn.dark{background:#484858}.btn.gold{background:#e0a030}.btn.purple{background:#8858c8}
+.btn.gray{background:#f8f8f8;color:#484848;text-shadow:.07em .07em 0 #d0d0c8;box-shadow:inset 0 0 0 .2em #a8c8f0}
+.btnrow{display:flex;flex-wrap:wrap;gap:.5em;flex-shrink:0}
+.btnrow .btn{flex:1 1 44%;width:auto}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:.6em;flex-shrink:0}
+.badge{background:#f8f8f8;color:#404040;border:.2em solid #383848;border-radius:.4em;padding:.7em .3em;text-align:center;font-size:.85em;font-weight:700;line-height:1.3;box-shadow:inset 0 0 0 .2em #f0d060}
+.badge .ic{font-size:2.2em;display:block;margin-bottom:.3em}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:.5em;flex-shrink:0}
+.moves.one{grid-template-columns:1fr}
+.rs{font-size:1em;line-height:1.45;font-weight:500}
+.rs .rc{text-align:center;line-height:1.5}.rs .rc b{font-size:1.5em}
+.rs h4{font-size:1.05em;color:#2a58c0;border-bottom:.14em solid #2a58c0;margin:.8em 0 .35em;letter-spacing:.08em}
+.rs .rt{display:flex;justify-content:space-between;align-items:baseline;gap:.8em;margin-top:.35em}.rs .rt i{white-space:nowrap;font-size:.92em}
+.rs .st{font-style:italic;color:#606060}
+.rs ul{margin:.25em 0 .55em 1.2em}.rs li{margin-bottom:.3em}
+.mv{font-size:1em;font-weight:700;background:#f8f8f8;border:.2em solid #383848;border-left:.6em solid #e0a030;border-radius:.35em;padding:.45em .7em;line-height:1.35;color:#404040}
+.mv small{display:block;font-weight:500;color:#707070;font-size:.85em}
+.list{display:flex;flex-direction:column;gap:.5em;flex-shrink:0}
+.li{display:flex;align-items:center;gap:1em;width:100%;font-family:inherit;font-size:1em;text-align:left;background:#f8f8f8;border:.2em solid #383848;border-radius:.4em;padding:.55em .9em;cursor:pointer;box-shadow:inset 0 0 0 .2em #a8c8f0;color:#404040}
+.li:hover,.li:focus-visible{background:#fff8c8;box-shadow:inset 0 0 0 .2em #f0c040}
+.li .ico{width:3em;height:3em}.li .ico span{font-size:1.4em}
+.li .n{font-size:1.2em;font-weight:700}.li .s{font-size:.85em;color:#707070}
+.li .pill{margin-left:auto;font-weight:700;flex-shrink:0;background:#383848;color:#fff;padding:.15em .6em;border-radius:.25em;font-size:.9em}
+.li .pill.done{background:#38a860}
+
+/* ===== title: the road into town is already visible behind it ===== */
+#title{display:flex;position:absolute;inset:0;z-index:100;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:3.5% 0 3.5%;background:linear-gradient(rgba(16,24,56,.88) 0%,rgba(16,24,56,.74) 34%,rgba(16,24,56,.46) 50%,rgba(16,24,56,.74) 64%,rgba(16,24,56,.9) 100%)}
+#title>div{display:flex;flex-direction:column;align-items:center;gap:.6em;width:100%}
+.paneled #title{visibility:hidden}              /* the résumé opened from the title covers it */
+#logo{font-size:3.2em;font-weight:700;line-height:1;letter-spacing:.03em;color:#fff;text-shadow:.05em 0 0 #1c2c58,-.05em 0 0 #1c2c58,0 .05em 0 #1c2c58,0 -.05em 0 #1c2c58,.05em .05em 0 #1c2c58,-.05em .05em 0 #1c2c58,.05em -.05em 0 #1c2c58,-.05em -.05em 0 #1c2c58,0 .13em 0 #101838}
+#logo small{display:block;font-size:.3em;color:#ffd870;letter-spacing:.34em;margin-bottom:.8em;text-shadow:.1em .1em 0 #101838}
+#title p{font-size:1.1em;color:#e8f0ff;line-height:1.5;text-shadow:.08em .08em 0 #101838;padding:0 1em;max-width:46em}
+#name{font-family:inherit;font-size:1.2em;font-weight:600;padding:.3em .8em;border:.2em solid #383848;border-radius:.4em;background:#f8f8f8;color:#484848;text-align:center;letter-spacing:.12em;width:min(64%,17em);text-transform:uppercase;box-shadow:inset 0 0 0 .25em #78a8d8}
+#name::placeholder{color:#9098a8;letter-spacing:.06em}
+#go{width:min(92%,25em);font-size:1.35em}
+.trow{display:flex;gap:.5em;justify-content:center;width:min(92%,27.5em)}
+.trow .btn{flex:1 1 0;width:auto;font-size:1.1em;padding:.5em .3em}
+.tlinks{display:flex;flex-wrap:wrap;gap:.2em 1.2em;justify-content:center;font-size:1.05em;padding:0 .6em}
+.tlinks a{color:#fff;text-decoration:underline;text-underline-offset:.22em;text-shadow:.08em .08em 0 #101838;padding:.15em 0}
+#flash{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:150;transition:opacity .2s}
+
+/* ===== controls ===== */
+#ctl{display:flex;align-items:center;justify-content:space-between;gap:2em;user-select:none;-webkit-user-select:none;touch-action:none}
+#joy{position:relative;width:132px;height:132px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06) 0 40%,rgba(255,255,255,.12) 41% 100%);border:3px solid rgba(255,255,255,.18);touch-action:none;flex-shrink:0}
+#joy::before{content:'';position:absolute;inset:14px;border-radius:50%;border:2px dashed rgba(255,255,255,.12)}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5a5a6e,#2a2a36);border:3px solid #6a6a80;box-shadow:0 6px 14px rgba(0,0,0,.5);pointer-events:none;transition:transform .08s}
+#joy.on #knob{transition:none}
+.ab{display:flex;gap:14px;align-items:flex-end;flex-shrink:0}
+.ab button{width:66px;height:66px;border-radius:50%;border:0;padding:0;background:#c83048;color:#fff;display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:700;font-size:15px;letter-spacing:.04em;cursor:pointer;box-shadow:0 5px 0 #801828;touch-action:none}
+.ab button.b{width:56px;height:56px;background:#3a3a50;box-shadow:0 5px 0 #1e1e2c;margin-bottom:22px;font-size:12.5px}
+.ab button.on{transform:translateY(4px);box-shadow:none}
+#hint{font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.9;display:flex;gap:.1em 1.2em;flex-wrap:wrap;justify-content:center;max-width:960px;padding:0 12px}
+#hint kbd{font-family:inherit;font-size:.95em;font-weight:600;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-bottom-width:2px;border-radius:5px;padding:.02em .4em}
+.touch #hint{display:none}
+body:not(.touch) #joy,body:not(.touch) .ab{display:none}
+body:not(.touch) #ctl{justify-content:center}
+.touch #ctl{width:100%;padding:0 22px}
+.touch.land #ctl{position:fixed;left:0;right:0;bottom:14px;pointer-events:none;z-index:300;padding:0 18px}
+.touch.land #joy,.touch.land .ab{pointer-events:auto;opacity:.8}
+.touch.land{gap:0}
+.touch.land.paneled #ctl,.touch.titled #ctl{visibility:hidden}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="titled">
+
+<div id="wrap">
+  <canvas id="c" width="960" height="640" role="img" aria-label="A top-down pixel town you can walk around. Buildings, kiosks and an airfield hold Fahadbin Alam's résumé, projects and links."></canvas>
+
+  <div id="title">
+    <div><div id="logo"><small>RÉSUMÉ QUEST</small>FAHADBIN ALAM</div>
+      <p>U.S. Army veteran (82nd Airborne) · Drexel CS student · builder</p>
+      <p>Walk through a small town to find his projects and experience, parachute in the way he did with the 82nd, or skip straight to the résumé.</p></div>
+    <div>
+      <label class="sr" for="name">Your name (optional)</label>
+      <input id="name" maxlength="8" placeholder="Your name (optional)" autocomplete="off" spellcheck="false">
+      <button id="go" class="btn green" type="button">▶ PLAY · ABOUT 2 MIN</button>
+      <div class="trow">
+        <button id="para" class="btn gold" type="button">🪂 PARACHUTE IN</button>
+        <button id="skip" class="btn gray" type="button">VIEW RÉSUMÉ NOW</button>
+      </div>
+      <nav class="tlinks" aria-label="Quick links">
+        <a href="https://www.linkedin.com/in/fahadbin-alam-/" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="https://github.com/Fahadbin-Alam" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://linktr.ee/fahadbin.alam" target="_blank" rel="noopener">Linktree ↗</a>
+        <a href="mailto:fma52@drexel.edu">fma52@drexel.edu</a>
+      </nav>
+    </div>
+  </div>
+
+  <div id="loc" aria-hidden="true"></div>
+  <div id="hud">
+    <div class="hb" id="prog" title="Crystals collected in the Workshop" aria-label="Crystals collected: 0 of 3"><b>◆</b> <span><i>0</i>/3</span></div>
+    <button class="hb cta" id="rbtn" type="button">RÉSUMÉ</button>
+    <button class="hb" id="dn" type="button" aria-label="Switch between day and night" title="Day / night">☾</button>
+  </div>
+  <div id="jhud" aria-hidden="true"></div>
+  <div id="dlg" role="button" tabindex="-1" aria-label="Continue"><div id="dlg-name"></div><div id="dlg-text" aria-hidden="true"></div><div id="dlg-arrow"></div></div>
+  <div id="sr" class="sr" aria-live="polite"></div>
+  <div id="menu" role="menu" aria-label="Menu"></div>
+
+  <div id="entry" class="panel" role="dialog" aria-modal="true" aria-labelledby="entry-h"><div class="ph" id="entry-h"></div><div class="pb" id="entry-b"></div></div>
+  <div id="flash"></div>
+</div>
+
+<div id="ctl">
+  <div id="joy" aria-hidden="true"><div id="knob"></div></div>
+  <div id="hint"><span>Move <kbd>←↑↓→</kbd> / <kbd>WASD</kbd></span><span>Talk &amp; open <kbd>Enter</kbd> / <kbd>Space</kbd></span><span>Menu <kbd>Esc</kbd></span><span>Résumé <kbd>R</kbd></span><span>Day / night <kbd>N</kbd></span><span>🎮 controllers work too</span></div>
+  <div class="ab"><button class="b" type="button" data-k="b" aria-label="Menu">MENU</button><button type="button" data-k="a" aria-label="Talk or open">TALK</button></div>
+</div>
+
+<script>

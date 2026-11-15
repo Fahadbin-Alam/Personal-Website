@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fahadbin Alam — Résumé Quest</title>
+<meta name="description" content="Fahadbin Alam's résumé as a small pixel town you can walk around — or parachute into. U.S. Army veteran (82nd Airborne), Drexel CS student, builder.">
+<meta name="theme-color" content="#0d1226">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fahadbin Alam — Résumé Quest">
+<meta property="og:description" content="A résumé you can play: walk around a small pixel town, or parachute in. U.S. Army veteran (82nd Airborne), Drexel CS student, builder.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230d1226'/%3E%3Cpath d='M8 2l4 5-4 7-4-7z' fill='%234878d8' stroke='%23fff' stroke-width='.8' stroke-linejoin='round'/%3E%3Cpath d='M8 2l4 5H4z' fill='%2390b8f8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#0d1226;overflow:hidden;font-family:'Pixelify Sans',ui-monospace,'Courier New',monospace;-webkit-tap-highlight-color:transparent;color:#fff}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;touch-action:none}
+button,input{font-family:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+:focus-visible{outline:.18em solid #f0a030;outline-offset:.1em}
+#wrap{position:relative;width:960px;height:640px;overflow:hidden;border-radius:6px;background:#000;box-shadow:0 0 0 3px #181820,0 0 0 6px #343848,0 24px 70px rgba(0,0,0,.6);font-size:16px;flex-shrink:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.smooth canvas{image-rendering:auto}
+
+/* ===== dialogue box ===== */
+#dlg{display:none;position:absolute;left:1.5%;right:1.5%;bottom:2%;min-height:27%;background:#f8f8f8;border:.22em solid #383848;border-radius:.45em;padding:.9em 1.3em;z-index:50;cursor:pointer;box-shadow:inset 0 0 0 .32em #78a8d8,inset 0 0 0 .5em #c8e0f8,inset 0 0 0 .62em #f8f8f8;color:#484848;outline:none}
+#dlg-name{position:absolute;top:-1.75em;left:.8em;background:#f8f8f8;color:#484848;font-weight:700;font-size:.95em;padding:.25em .9em;border:.22em solid #383848;border-radius:.35em;box-shadow:inset 0 0 0 .25em #78a8d8;text-shadow:.08em .08em 0 #d0d0c8}
+#dlg-text{font-size:1.4em;font-weight:500;line-height:1.5;white-space:pre-wrap;padding:.15em .2em 0;color:#484848;text-shadow:.07em .07em 0 #d0d0c8}
+#dlg-arrow{position:absolute;right:1.3em;bottom:.8em;width:0;height:0;border-left:.5em solid transparent;border-right:.5em solid transparent;border-top:.7em solid #e03040;animation:bob .6s ease-in-out infinite alternate;display:none}
+@keyframes bob{to{transform:translateY(.25em)}}
+
+/* ===== menu ===== */
+#menu{display:none;position:absolute;right:1.5%;top:2.5%;z-index:55;background:#f8f8f8;border:.22em solid #383848;border-radius:.45em;padding:.6em .4em;box-shadow:inset 0 0 0 .32em #78a8d8,inset 0 0 0 .5em #c8e0f8;min-width:36%}
+.mi{display:flex;align-items:center;gap:.4em;width:100%;padding:.36em .9em;font-family:inherit;font-weight:600;font-size:1.3em;color:#484848;background:none;border:0;cursor:pointer;text-align:left;text-decoration:none;text-shadow:.07em .07em 0 #d0d0c8}
+.mi::before{content:'▶';font-size:.7em;opacity:0;width:1em}
+.mi:hover::before,.mi:focus-visible::before{opacity:1}
+.mi:focus-visible{outline:none;background:#fff8c8}
+
+/* ===== location popup · top-right HUD · parachute read-out ===== */
+#loc{position:absolute;left:2%;top:2.5%;z-index:45;background:#f8f0d8;border:.22em solid #383028;border-radius:.3em;padding:.35em 1.1em;font-size:1.25em;font-weight:600;color:#484040;text-shadow:.07em .07em 0 #d8c8a0;box-shadow:inset 0 0 0 .25em #c89050,inset 0 0 0 .38em #f8f0d8;transform:translateY(-240%);transition:transform .3s steps(5);pointer-events:none}
+#loc.show{transform:none}
+#hud{display:none;position:absolute;right:2%;top:2.5%;z-index:44;gap:.4em;align-items:stretch}
+#hud.on{display:flex}
+.menuopen #hud{visibility:hidden}                /* the menu sits in the same corner */
+.hb{display:flex;align-items:center;justify-content:center;gap:.35em;height:2.3em;min-width:2.3em;padding:0 .65em;font-family:inherit;font-size:1.05em;font-weight:700;line-height:1;border:.18em solid #383848;border-radius:.4em;background:#f8f8f8;color:#484848;box-shadow:inset 0 0 0 .2em #78a8d8;white-space:nowrap}
+button.hb{cursor:pointer}
+.hb.cta{background:#e05048;color:#fff;letter-spacing:.05em;box-shadow:inset 0 -.25em 0 rgba(0,0,0,.2),inset 0 .15em 0 rgba(255,255,255,.25);text-shadow:.08em .08em 0 rgba(0,0,0,.4)}
+#prog b{color:#8858c8}#prog i{font-style:normal}
+#dn{padding:0;font-size:1.15em}
+.touch .hb{min-height:34px;font-size:13px}
+.touch #dn{min-width:34px;font-size:18px}
+#jhud{display:none;position:absolute;left:50%;bottom:3.5%;transform:translateX(-50%);z-index:46;background:rgba(16,24,56,.88);color:#fff;border:.16em solid #f8f8f8;border-radius:.4em;padding:.3em .9em;font-size:1.05em;font-weight:600;white-space:nowrap;letter-spacing:.03em;pointer-events:none}
+#jhud.on{display:block}
+.touch #jhud{font-size:12.5px}
+
+/* ===== panels ===== */
+.panel{display:none;position:absolute;inset:0;z-index:60;flex-direction:column;overflow:hidden;color:#404040;background-color:#d8e8f8;background-image:linear-gradient(45deg,#c4d8f0 25%,transparent 25%,transparent 75%,#c4d8f0 75%),linear-gradient(45deg,#c4d8f0 25%,transparent 25%,transparent 75%,#c4d8f0 75%);background-size:1.2em 1.2em;background-position:0 0,.6em .6em}
+.touch .panel{position:fixed;font-size:14px}
+.ph{padding:.65em 1.2em;display:flex;justify-content:space-between;align-items:center;gap:.6em;font-weight:700;font-size:1.25em;color:#fff;background:#e05048;border-bottom:.22em solid #383848;text-shadow:.08em .08em 0 rgba(0,0,0,.45);box-shadow:inset 0 -.3em 0 rgba(0,0,0,.2),inset 0 .2em 0 rgba(255,255,255,.25)}
+.ph.blue{background:#4878d8}.ph.green{background:#38a860}.ph.gold{background:#e0a030}.ph.purple{background:#8858c8}.ph.navy{background:#405890}
+.ph small{font-size:.72em;background:rgba(0,0,0,.25);padding:.15em .6em;border-radius:.2em;white-space:nowrap}
+.pb{flex:1;overflow-y:auto;padding:.9em 1.2em 1.2em;display:flex;flex-direction:column;gap:.7em;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.img{width:100%;flex-shrink:0;border:.22em solid #383848;border-radius:.35em;overflow:hidden}.img svg{display:block;width:100%;height:auto;border-radius:0!important}
+.pb::-webkit-scrollbar{width:.6em}.pb::-webkit-scrollbar-thumb{background:#383848}
+.card{background:#f8f8f8;border:.2em solid #383848;border-radius:.4em;padding:.75em 1em;box-shadow:inset 0 0 0 .22em #a8c8f0;color:#404040;flex-shrink:0}
+.card.row{display:flex;align-items:center;gap:1em}
+.card a{color:#2a58c0}
+.ico{width:4.2em;height:4.2em;border-radius:.7em;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:.2em solid #383848;box-shadow:inset 0 0 0 .22em rgba(255,255,255,.5),inset 0 -.55em 0 rgba(0,0,0,.14)}
+.ico span{font-size:2em;line-height:1}
+.t1{font-size:1.45em;font-weight:700;margin-bottom:.2em;color:#383838;text-shadow:.07em .07em 0 #d0d0c8}
+.t2{font-size:1em;font-weight:500;color:#606060;line-height:1.5}
+.flavor{font-size:1.1em;font-weight:500;line-height:1.5;text-shadow:.06em .06em 0 #e0e0d8}
+.type{display:inline-block;font-size:.8em;font-weight:700;padding:.05em .6em;border:.15em solid #383848;border-radius:.25em;color:#fff;margin-right:.5em;text-shadow:.07em .07em 0 rgba(0,0,0,.4)}
+.bars{display:flex;flex-direction:column;gap:.5em}
+.br{display:flex;align-items:center;gap:.8em;font-size:1em;font-weight:700;color:#484848}
+.br b{width:6em;flex-shrink:0}
+.bg{flex:1;height:.8em;background:#505060;border:.15em solid #383848;border-radius:.2em;overflow:hidden}
+.bf{height:100%;width:0;transition:width .9s steps(12)}
+.br i{width:2.2em;text-align:right;font-style:normal}
+.btn{display:flex;align-items:center;justify-content:center;gap:.5em;width:100%;font-family:inherit;font-size:1.2em;font-weight:700;padding:.6em;text-decoration:none;text-align:center;border:.2em solid #383848;border-radius:.4em;cursor:pointer;color:#fff;background:#4878d8;box-shadow:inset 0 -.3em 0 rgba(0,0,0,.22),inset 0 .2em 0 rgba(255,255,255,.25);text-shadow:.08em .08em 0 rgba(0,0,0,.45);flex-shrink:0}
+.btn:active{transform:translateY(.15em)}
+.nb{white-space:nowrap}
+.btn.red{background:#e05048}.btn.green{background:#38a860}.btn.dark{background:#484858}.btn.gold{background:#e0a030}.btn.purple{background:#8858c8}
+.btn.gray{background:#f8f8f8;color:#484848;text-shadow:.07em .07em 0 #d0d0c8;box-shadow:inset 0 0 0 .2em #a8c8f0}
+.btnrow{display:flex;flex-wrap:wrap;gap:.5em;flex-shrink:0}
+.btnrow .btn{flex:1 1 44%;width:auto}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:.6em;flex-shrink:0}
+.badge{background:#f8f8f8;color:#404040;border:.2em solid #383848;border-radius:.4em;padding:.7em .3em;text-align:center;font-size:.85em;font-weight:700;line-height:1.3;box-shadow:inset 0 0 0 .2em #f0d060}
+.badge .ic{font-size:2.2em;display:block;margin-bottom:.3em}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:.5em;flex-shrink:0}
+.moves.one{grid-template-columns:1fr}
+.rs{font-size:1em;line-height:1.45;font-weight:500}
+.rs .rc{text-align:center;line-height:1.5}.rs .rc b{font-size:1.5em}
+.rs h4{font-size:1.05em;color:#2a58c0;border-bottom:.14em solid #2a58c0;margin:.8em 0 .35em;letter-spacing:.08em}
+.rs .rt{display:flex;justify-content:space-between;align-items:baseline;gap:.8em;margin-top:.35em}.rs .rt i{white-space:nowrap;font-size:.92em}
+.rs .st{font-style:italic;color:#606060}
+.rs ul{margin:.25em 0 .55em 1.2em}.rs li{margin-bottom:.3em}
+.mv{font-size:1em;font-weight:700;background:#f8f8f8;border:.2em solid #383848;border-left:.6em solid #e0a030;border-radius:.35em;padding:.45em .7em;line-height:1.35;color:#404040}
+.mv small{display:block;font-weight:500;color:#707070;font-size:.85em}
+.list{display:flex;flex-direction:column;gap:.5em;flex-shrink:0}
+.li{display:flex;align-items:center;gap:1em;width:100%;font-family:inherit;font-size:1em;text-align:left;background:#f8f8f8;border:.2em solid #383848;border-radius:.4em;padding:.55em .9em;cursor:pointer;box-shadow:inset 0 0 0 .2em #a8c8f0;color:#404040}
+.li:hover,.li:focus-visible{background:#fff8c8;box-shadow:inset 0 0 0 .2em #f0c040}
+.li .ico{width:3em;height:3em}.li .ico span{font-size:1.4em}
+.li .n{font-size:1.2em;font-weight:700}.li .s{font-size:.85em;color:#707070}
+.li .pill{margin-left:auto;font-weight:700;flex-shrink:0;background:#383848;color:#fff;padding:.15em .6em;border-radius:.25em;font-size:.9em}
+.li .pill.done{background:#38a860}
+
+/* ===== title: the road into town is already visible behind it ===== */
+#title{display:flex;position:absolute;inset:0;z-index:100;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:3.5% 0 3.5%;background:linear-gradient(rgba(16,24,56,.88) 0%,rgba(16,24,56,.74) 34%,rgba(16,24,56,.46) 50%,rgba(16,24,56,.74) 64%,rgba(16,24,56,.9) 100%)}
+#title>div{display:flex;flex-direction:column;align-items:center;gap:.6em;width:100%}
+.paneled #title{visibility:hidden}              /* the résumé opened from the title covers it */
+#logo{font-size:3.2em;font-weight:700;line-height:1;letter-spacing:.03em;color:#fff;text-shadow:.05em 0 0 #1c2c58,-.05em 0 0 #1c2c58,0 .05em 0 #1c2c58,0 -.05em 0 #1c2c58,.05em .05em 0 #1c2c58,-.05em .05em 0 #1c2c58,.05em -.05em 0 #1c2c58,-.05em -.05em 0 #1c2c58,0 .13em 0 #101838}
+#logo small{display:block;font-size:.3em;color:#ffd870;letter-spacing:.34em;margin-bottom:.8em;text-shadow:.1em .1em 0 #101838}
+#title p{font-size:1.1em;color:#e8f0ff;line-height:1.5;text-shadow:.08em .08em 0 #101838;padding:0 1em;max-width:46em}
+#name{font-family:inherit;font-size:1.2em;font-weight:600;padding:.3em .8em;border:.2em solid #383848;border-radius:.4em;background:#f8f8f8;color:#484848;text-align:center;letter-spacing:.12em;width:min(64%,17em);text-transform:uppercase;box-shadow:inset 0 0 0 .25em #78a8d8}
+#name::placeholder{color:#9098a8;letter-spacing:.06em}
+#go{width:min(92%,25em);font-size:1.35em}
+.trow{display:flex;gap:.5em;justify-content:center;width:min(92%,27.5em)}
+.trow .btn{flex:1 1 0;width:auto;font-size:1.1em;padding:.5em .3em}
+.tlinks{display:flex;flex-wrap:wrap;gap:.2em 1.2em;justify-content:center;font-size:1.05em;padding:0 .6em}
+.tlinks a{color:#fff;text-decoration:underline;text-underline-offset:.22em;text-shadow:.08em .08em 0 #101838;padding:.15em 0}
+#flash{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:150;transition:opacity .2s}
+
+/* ===== controls ===== */
+#ctl{display:flex;align-items:center;justify-content:space-between;gap:2em;user-select:none;-webkit-user-select:none;touch-action:none}
+#joy{position:relative;width:132px;height:132px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06) 0 40%,rgba(255,255,255,.12) 41% 100%);border:3px solid rgba(255,255,255,.18);touch-action:none;flex-shrink:0}
+#joy::before{content:'';position:absolute;inset:14px;border-radius:50%;border:2px dashed rgba(255,255,255,.12)}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5a5a6e,#2a2a36);border:3px solid #6a6a80;box-shadow:0 6px 14px rgba(0,0,0,.5);pointer-events:none;transition:transform .08s}
+#joy.on #knob{transition:none}
+.ab{display:flex;gap:14px;align-items:flex-end;flex-shrink:0}
+.ab button{width:66px;height:66px;border-radius:50%;border:0;padding:0;background:#c83048;color:#fff;display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:700;font-size:15px;letter-spacing:.04em;cursor:pointer;box-shadow:0 5px 0 #801828;touch-action:none}
+.ab button.b{width:56px;height:56px;background:#3a3a50;box-shadow:0 5px 0 #1e1e2c;margin-bottom:22px;font-size:12.5px}
+.ab button.on{transform:translateY(4px);box-shadow:none}
+#hint{font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.9;display:flex;gap:.1em 1.2em;flex-wrap:wrap;justify-content:center;max-width:960px;padding:0 12px}
+#hint kbd{font-family:inherit;font-size:.95em;font-weight:600;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-bottom-width:2px;border-radius:5px;padding:.02em .4em}
+.touch #hint{display:none}
+body:not(.touch) #joy,body:not(.touch) .ab{display:none}
+body:not(.touch) #ctl{justify-content:center}
+.touch #ctl{width:100%;padding:0 22px}
+.touch.land #ctl{position:fixed;left:0;right:0;bottom:14px;pointer-events:none;z-index:300;padding:0 18px}
+.touch.land #joy,.touch.land .ab{pointer-events:auto;opacity:.8}
+.touch.land{gap:0}
+.touch.land.paneled #ctl,.touch.titled #ctl{visibility:hidden}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="titled">
+
+<div id="wrap">
+  <canvas id="c" width="960" height="640" role="img" aria-label="A top-down pixel town you can walk around. Buildings, kiosks and an airfield hold Fahadbin Alam's résumé, projects and links."></canvas>
+
+  <div id="title">
+    <div><div id="logo"><small>RÉSUMÉ QUEST</small>FAHADBIN ALAM</div>
+      <p>U.S. Army veteran (82nd Airborne) · Drexel CS student · builder</p>
+      <p>Walk through a small town to find his projects and experience, parachute in the way he did with the 82nd, or skip straight to the résumé.</p></div>
+    <div>
+      <label class="sr" for="name">Your name (optional)</label>
+      <input id="name" maxlength="8" placeholder="Your name (optional)" autocomplete="off" spellcheck="false">
+      <button id="go" class="btn green" type="button">▶ PLAY · ABOUT 2 MIN</button>
+      <div class="trow">
+        <button id="para" class="btn gold" type="button">🪂 PARACHUTE IN</button>
+        <button id="skip" class="btn gray" type="button">VIEW RÉSUMÉ NOW</button>
+      </div>
+      <nav class="tlinks" aria-label="Quick links">
+        <a href="https://www.linkedin.com/in/fahadbin-alam-/" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="https://github.com/Fahadbin-Alam" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://linktr.ee/fahadbin.alam" target="_blank" rel="noopener">Linktree ↗</a>
+        <a href="mailto:fma52@drexel.edu">fma52@drexel.edu</a>
+      </nav>
+    </div>
+  </div>
+
+  <div id="loc" aria-hidden="true"></div>
+  <div id="hud">
+    <div class="hb" id="prog" title="Crystals collected in the Workshop" aria-label="Crystals collected: 0 of 3"><b>◆</b> <span><i>0</i>/3</span></div>
+    <button class="hb cta" id="rbtn" type="button">RÉSUMÉ</button>
+    <button class="hb" id="dn" type="button" aria-label="Switch between day and night" title="Day / night">☾</button>
+  </div>
+  <div id="jhud" aria-hidden="true"></div>
+  <div id="dlg" role="button" tabindex="-1" aria-label="Continue"><div id="dlg-name"></div><div id="dlg-text" aria-hidden="true"></div><div id="dlg-arrow"></div></div>
+  <div id="sr" class="sr" aria-live="polite"></div>
+  <div id="menu" role="menu" aria-label="Menu"></div>
+
+  <div id="entry" class="panel" role="dialog" aria-modal="true" aria-labelledby="entry-h"><div class="ph" id="entry-h"></div><div class="pb" id="entry-b"></div></div>
+  <div id="flash"></div>
+</div>
+
+<div id="ctl">
+  <div id="joy" aria-hidden="true"><div id="knob"></div></div>
+  <div id="hint"><span>Move <kbd>←↑↓→</kbd> / <kbd>WASD</kbd></span><span>Talk &amp; open <kbd>Enter</kbd> / <kbd>Space</kbd></span><span>Menu <kbd>Esc</kbd></span><span>Résumé <kbd>R</kbd></span><span>Day / night <kbd>N</kbd></span><span>🎮 controllers work too</span></div>
+  <div class="ab"><button class="b" type="button" data-k="b" aria-label="Menu">MENU</button><button type="button" data-k="a" aria-label="Talk or open">TALK</button></div>
+</div>
+
+<script>
+/* ═════════ DATA — from the résumé (November 2026) + linktr.ee/fahadbin.alam ═════════ */
+const IS_TOUCH=matchMedia('(pointer:coarse)').matches||(('ontouchstart' in window)&&!matchMedia('(pointer:fine)').matches);
+const ACT=IS_TOUCH?'TALK':'ENTER';                 // what the "talk / open" control is called on this device
+const F={name:'FAHADBIN',email:'fma52@drexel.edu',linktree:'https://linktr.ee/fahadbin.alam',
+  linkedin:'https://www.linkedin.com/in/fahadbin-alam-/',github:'https://github.com/Fahadbin-Alam',
+  nonprofit:'https://one-world-relief.org',book:'https://www.amazon.com/Ivory-Fahadbin-Mihad-Alam/dp/B0B9QM23FH',
+  discord:'https://discord.gg/mmMQe7vq',phone:'tel:+18568707528',
+  muslimo:'https://github.com/Fahadbin-Alam/Muslimo',sahabah:'https://github.com/Fahadbin-Alam/Roblox-Islamic-Game',
+  /* No hosted résumé PDF yet: the résumé-file button points at Linktree. Put a PDF URL here to switch every such button to it. */
+  resumePdf:''};
+const RESUME_LINK=F.resumePdf?['DOWNLOAD RÉSUMÉ (PDF)',F.resumePdf,'green']:['RÉSUMÉ · LINKTREE',F.linktree,'green'];
+
+/* Résumé bullets, kept word for word */
+const R={
+  muslimo:[
+    `Architected a cross-platform learning platform pairing a TypeScript/React Native client with a Python/FastAPI backend of 40+ REST endpoints, serving 251 lessons and 645 quiz questions with gamified progression and social features.`,
+    `Designed an 18-table relational schema with SQLAlchemy and 11 versioned Alembic migrations, and implemented offline-first sync that stores progress on-device and uploads it to the server on reconnect.`,
+    `Secured accounts and paid features with PBKDF2 password hashing, server-side Google token verification, and authenticated RevenueCat webhooks, keeping the server the single source of truth for premium access.`,
+    `Built a GitHub Actions CI pipeline running 95 backend pytest tests, frontend unit tests, TypeScript type checks, and Android/iOS bundle exports on every pull request, surfacing regressions before merge.`],
+  sahabah:[
+    `Engineered game systems for an educational Roblox experience for ages 9–17, including XP progression, quests, quizzes, achievements, and daily streaks built on shared data modules.`,
+    `Implemented fault-tolerant DataStoreService persistence with 120-second autosaves, 3 load retries, and data-loss guards.`,
+    `Enforced server-authoritative quiz scoring with input validation and submission cooldowns, verified by 20 automated Luau tests across 3 suites and static analysis in GitHub Actions.`],
+  owr:[
+    `Independently architected and deployed a serverless donation platform on Cloudflare Pages Functions with Stripe Checkout, processing $20K+ across 50+ donations for multiple fundraising campaigns.`,
+    `Secured the payment backend with HMAC-SHA256 webhook signature verification and automated invalid-signature tests, ensuring only authentic Stripe events update donation records.`,
+    `Automated Stripe-to-Google Sheets donation tracking (10 fields per record), saving about 4 hours of bookkeeping monthly.`],
+  mssa:[
+    `Engineered a C#/.NET application with 4 core features using object-oriented architecture and persistent storage.`,
+    `Deployed ASP.NET Core REST APIs and a SQL database to Microsoft Azure, validated with unit and integration tests.`],
+  army:[
+    `Automated Cisco configuration in Python across 10+ devices and 25+ files, cutting deployment time 83% (3 hrs to 30 min).`,
+    `Engineered Python configuration-change detection, accelerating root-cause analysis across 50+ network incidents.`,
+    `Led a 5-person team in standardizing incident-response workflows, contributing to an estimated 25–30% less downtime.`],
+  airbnb:[
+    `Automated 3 operational workflows in Python (guest communications, vendor coordination, and expense tracking) for 3–5 rental properties, producing tax-ready financial records without manual bookkeeping.`],
+};
+const SKILLS=[
+  ['Languages','Python · TypeScript · JavaScript · C# · SQL · Luau · HTML/CSS'],
+  ['Frameworks & Libraries','FastAPI · React Native (Expo) · ASP.NET Core · .NET · SQLAlchemy · Alembic'],
+  ['Databases & Cloud','PostgreSQL · SQLite · Microsoft Azure · Cloudflare Pages/Functions · Docker · Linux'],
+  ['Tools & Testing','Git/GitHub · GitHub Actions · pytest · Unit/Integration Testing · REST APIs · Stripe · RevenueCat · Rojo'],
+];
+
+/* The three crystals on the Workshop table */
+const CRYSTALS=[
+  {n:'PROJECTS',t:'BUILDER',c:'#7c3aed',e:'⚙️',f:'Two lead projects: MUSLIMO, a full-stack Islamic learning platform (React Native + FastAPI, 40+ REST endpoints, 251 lessons, 645 quiz questions), and PATH OF THE SAHABAH, a Roblox educational game in Luau. Plus a live donation platform and Army network automation. Visit the four kiosks in PROJECT PARK to see each one.',s:{CODE:94,DESIGN:86,SHIPPING:90,IMPACT:88,RANGE:92},links:[['MUSLIMO ON GITHUB',F.muslimo,'green'],['PATH OF THE SAHABAH ON GITHUB',F.sahabah,'red'],['ALL CODE ON GITHUB',F.github,'dark']]},
+  {n:'RÉSUMÉ',t:'DOCUMENT',c:'#2a6df4',e:'📄',f:'One page: full-stack projects in Python and TypeScript, a serverless donation platform that has processed $20K+, five years in the 82nd Airborne Division, and four certifications. U.S. Army Veteran (Honorable Discharge) · Secret Clearance.',s:{CLARITY:95,SKILLS:90,CERTS:96,DEPTH:88,FORMAT:92},links:[RESUME_LINK,['CONNECT ON LINKEDIN',F.linkedin,''],['EMAIL · fma52@drexel.edu','mailto:'+F.email,'purple']]},
+  {n:'EXPERIENCE',t:'VETERAN',c:'#1fa36a',e:'🪖',f:'Founder & Developer of ONE WORLD RELIEF (2026). MICROSOFT SOFTWARE & SYSTEMS ACADEMY, Cloud Application Development Program (2025). U.S. ARMY, 82nd AIRBORNE DIVISION — Communications Systems Specialist, Sergeant (2020 – 2025). AIRBNB HOST who automated his rental operations in Python (2019 – 2023). Visit the barracks, the MSSA Center and One World Relief for the full story.',s:{LEADERSHIP:96,NETWORKS:94,AUTOMATION:90,CLOUD:85,GRIT:99},links:[['VIEW ON LINKEDIN',F.linkedin,''],['ONE WORLD RELIEF',F.nonprofit,'green']]},
+];
+/* The four kiosks in Project Park */
+const KIOSKS=[
+  {n:'MUSLIMO',e:'📱',t:'FULL-STACK',c:'#1fa36a',sub:'Full-Stack Islamic Learning Platform',when:'April 2026 – Present',stack:'TypeScript, React Native (Expo), Python, FastAPI, SQLAlchemy, Alembic, PostgreSQL, Docker',f:R.muslimo,
+   moves:[['TYPESCRIPT','React Native (Expo)'],['PYTHON · FASTAPI','40+ REST endpoints'],['POSTGRESQL','18 tables · 11 migrations'],['GITHUB ACTIONS','95 pytest tests in CI']],links:[['MUSLIMO ON GITHUB',F.muslimo,'dark']]},
+  {n:'PATH OF THE SAHABAH',e:'🎮',t:'LUAU',c:'#e63946',sub:'Roblox Educational Game',when:'April 2026',stack:'Luau, Roblox Studio, Rojo, DataStoreService, GitHub Actions',f:R.sahabah,
+   moves:[['LUAU','Roblox Studio · Rojo'],['DATASTORE','120-second autosaves'],['SERVER SCORING','Validation · cooldowns'],['GITHUB ACTIONS','20 automated tests']],links:[['PATH OF THE SAHABAH ON GITHUB',F.sahabah,'dark']]},
+  {n:'DONATION PLATFORM',e:'💳',t:'SERVERLESS',c:'#2a6df4',sub:'One World Relief · Founder & Developer',when:'March 2026',stack:'Cloudflare Pages Functions, Stripe Checkout, HMAC-SHA256 webhooks, Google Sheets',f:R.owr,
+   moves:[['CLOUDFLARE','Pages Functions'],['STRIPE CHECKOUT','$20K+ · 50+ donations'],['HMAC-SHA256','Webhook verification'],['GOOGLE SHEETS','10 fields per record']],links:[['VISIT ONE-WORLD-RELIEF.ORG',F.nonprofit,'green']]},
+  {n:'NETWORK AUTOMATION',e:'🛰️',t:'PYTHON',c:'#7c3aed',sub:'U.S. Army, 82nd Airborne Division',when:'June 2020 – June 2025',stack:'Python, Cisco',f:R.army.slice(0,2),
+   moves:[['PYTHON','Configuration automation'],['CISCO','10+ devices · 25+ files'],['83% FASTER','3 hrs to 30 min'],['CHANGE DETECTION','50+ incidents']],links:[['VIEW ON LINKEDIN',F.linkedin,'']]},
+];
+/* ═════════ PIXEL CORE — everything is drawn 1:1 in art pixels (16 px tiles) ═════════ */
+const TS=16;
+const $=id=>document.getElementById(id);
+const hash=(x,y)=>((((x+97)*73856093)^((y+57)*19349663))>>>0);
+function mkc(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+const Q=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
+function stamp(c,rows,pal,ox,oy,flip){ox=ox||0;oy=oy||0;
+  for(let j=0;j<rows.length;j++){const r=rows[j],n=r.length;
+    for(let i=0;i<n;i++){const col=pal[r[i]];if(col){c.fillStyle=col;c.fillRect(ox+(flip?n-1-i:i),oy+j,1,1);}}}}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');}
+function grid(w,h){const g=[];for(let y=0;y<h;y++)g.push(new Array(w).fill(null));return g;}
+function gs(g,x,y,c){if(y>=0&&y<g.length&&x>=0&&x<g[0].length)g[y][x]=c;}
+function outline(g,col){const h=g.length,w=g[0].length,o=[];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(!g[y][x]&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{const yy=y+dy,xx=x+dx;return yy>=0&&yy<h&&xx>=0&&xx<w&&g[yy][xx]&&g[yy][xx]!==col;}))o.push([x,y]);
+  o.forEach(([x,y])=>g[y][x]=col);}
+function blit(c,g,ox,oy){ox=ox||0;oy=oy||0;for(let y=0;y<g.length;y++)for(let x=0;x<g[0].length;x++)if(g[y][x])Q(c,ox+x,oy+y,1,1,g[y][x]);}
+
+/* Day palette — the daytime route reference, lifted a touch brighter */
+const C={
+  g:'#74d4a4',gT:'#56b88c',gL:'#aaf0cc',gS:'#5cbc90',
+  s:'#f6e690',sD:'#e0cc78',sL:'#fcf4bc',sE:'#e4d28a',b1:'#bceaa8',b2:'#92dca8',b3:'#d0e09c',
+  tK:'#2c6c20',tD:'#3a8c34',tM:'#46a45c',tB:'#56bc7c',tL:'#80dca4',tH:'#b8f4cc',
+  eK:'#205c38',eD:'#34884c',eM:'#52b65a',eL:'#84dc6c',eH:'#c4f88c',wd:'#b08050',wdD:'#805830',
+  fK:'#5c6480',fW:'#f8f8ff',fL:'#dce0f4',fB:'#a8b2cc',fb:'#949eb8',fS:'#74968e',
+  lK:'#583038',lD:'#744048',lM:'#8c5458',lH:'#a87470',
+  nK:'#48546c',nW:'#f8f8fc',nL:'#e0e0f0',nb:'#b4b8d0',nT:'#e84848',
+  rR:'#f04c4c',rL:'#fc8874',rK:'#b83040',rO:'#fcc050',lf:'#3cb874',lfL:'#78dc9c',lfK:'#22744a',
+  w:'#60a0f0',wL:'#90c4fc',wH:'#c8e4ff',wD:'#4480d8',wK:'#3264b0',
+  o:'#404050',lit:'#f8e078',litH:'#fff4b8',ndot:'#4c7cac',
+};
+
+/* Night palette — lavender ground, teal plants, dark outlines (the night reference).
+   Named colours are remapped exactly; anything else goes through a generic dusk tint. */
+const NMAP=new Map();const rgbInt=h=>parseInt(h.slice(1),16);
+function N(day,night){NMAP.set(rgbInt(day),rgbInt(night));}
+[['g','#7c7acc'],['gT','#447ca8'],['gL','#6894c4'],['gS','#646cb4'],
+ ['s','#827ad0'],['sD','#7068b4'],['sL','#9088dc'],['sE','#7e78cc'],['b1','#807cd0'],['b2','#7e7acc'],['b3','#827cd0'],
+ ['tK','#0c3444'],['tD','#185c74'],['tM','#206c8c'],['tB','#307c9c'],['tL','#5094b8'],['tH','#80acd0'],
+ ['eK','#0a141e'],['eD','#0e3c48'],['eM','#1a6078'],['eL','#247c94'],['eH','#3c98b0'],['wd','#544c80'],['wdD','#322c58'],
+ ['fK','#18183a'],['fW','#9088d8'],['fL','#7c74c0'],['fB','#5e5a9c'],['fb','#484474'],['fS','#6464a8'],
+ ['lK','#201838'],['lD','#443464'],['lM','#5c4888'],['lH','#7860ac'],
+ ['nK','#1c1c30'],['nW','#847cc8'],['nL','#7068b0'],['nb','#54508c'],['nT','#302c5c'],
+ ['rR','#a02880'],['rL','#c850a0'],['rK','#681460'],['rO','#d878b8'],['lf','#206c8c'],['lfL','#4490ac'],['lfK','#0e4054'],
+ ['w','#4458ac'],['wL','#5c74c8'],['wH','#8898dc'],['wD','#32408c'],['wK','#202868'],
+ ['lit','#f8e078'],['litH','#fff4b8'],['ndot','#4c7cac'],
+].forEach(([k,n])=>N(C[k],n));
+function nightRGB(v){const m=NMAP.get(v);if(m!==undefined)return m;
+  const r=v>>16,g=(v>>8)&255,b=v&255,L=.3*r+.59*g+.11*b,k=.3+.7*L/255;
+  const R2=Math.min(255,(.55*r+.45*L)*.64+14*k)|0,G2=Math.min(255,(.55*g+.45*L)*.58+10*k)|0,B2=Math.min(255,(.55*b+.45*L)*.84+56*k)|0;
+  return (R2<<16)|(G2<<8)|B2;}
+function nightify(g,w,h){const d=g.getImageData(0,0,w,h),a=d.data;
+  for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const v=nightRGB((a[i]<<16)|(a[i+1]<<8)|a[i+2]);a[i]=v>>16;a[i+1]=(v>>8)&255;a[i+2]=v&255;}
+  g.putImageData(d,0,0);}
+
+/* art cache: one canvas per key and light mode. `fixed` art (characters, interiors) is never tinted. */
+const ART={};let LIGHT='d',ND=false;
+function art(key,w,h,draw,fixed){const k=fixed?key:key+'|'+LIGHT;let c=ART[k];if(c)return c;
+  c=mkc(w,h);const g=c.getContext('2d');ND=!fixed&&LIGHT==='n';draw(g);if(ND)nightify(g,w,h);ND=false;return ART[k]=c;}
+/* ═════════ WORLD ═════════ */
+const G=0,PATH=2,TRE=3,FLW=4,TALL=5,WAT=6,FEN=8,SIGN=9,WALL=12,DOOR=14,BUSH=16,FENV=17,LEDGE=18,KIOSK=31,FNT=34,BOARD=35,MAILBOX=36,APRON=40,HELIPAD=41;
+const FLOOR=20,WALLI=21,TABLE=22,EXIT=23,RUG=24,SHELF=25,FRIDGE=26,DESK=27;
+const SOLID=new Set([TRE,WAT,FEN,FENV,SIGN,WALL,BUSH,LEDGE,WALLI,TABLE,SHELF,FRIDGE,DESK,KIOSK,FNT,BOARD,MAILBOX,HELIPAD]);
+
+/* T tree · . grass · = sand path · w meadow plants · f flowers · F picket fence · I fence post run · S signpost
+   L ledge · ~ pond · o shrub · B bulletin board · M mailbox · K project kiosk · O fountain · c airfield apron
+   X helicopter pad · other letters = buildings */
+const ROWS=[
+'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+'TTT......TT.WWWWWWWW.TT......TTTTTTTTTTT',
+'TTTHHHHH.TT.WWWWWWWW.TTAAAAAATTTTTTTTTTT',
+'T.fHHHHH....WWWWWWWW...AAAAAAf.TTTTTTTTT',
+'T..HHHHH....WWWWWWWW...AAAAAA..TTTTTTTTT',
+'T..HHHHH....WWWWWWWW...AAAAAA..TTccccccT',
+'T..M.=....FFFF.==SFFF....S=...STTcXXXXcT',
+'T================================cXXXXcT',
+'T================================cXXXXcT',
+'T.f....f...S========FFFFF==FFFFFFcXXXXcT',
+'T...........=B===OO=Iof..==..foooccccccT',
+'T.DDDDDD....=====OO=I..K.==.K..TTTTTTTTT',
+'T.DDDDDD.~~~========I....==....TTTTTTTTT',
+'T.DDDDDD.~~~...==...I..K.==.K..TTTTTTTTT',
+'T.DDDDDD.~~~.f.==.f.Iof..==..foTTTTTTTTT',
+'T...S=.........==...FFFFF==FFFFTTTTTTTTT',
+'T....=..f.....S==..f....S==....TTTTTTTTT',
+'T==============================TTTTTTTTT',
+'T==============================TTTTTTTTT',
+'T..CCCCCC..f.f.==..mmmmm.RRRRRRTTTTTTTTT',
+'T..CCCCCC......==..mmmmm.RRRRRRTTTTTTTTT',
+'T..CCCCCC.f.f..==..mmmmm.RRRRRRTTTTTTTTT',
+'T...==========================.TTTTTTTTT',
+'TFFFFFFFFFFFFFF==FFFFFFFFFFFFFFTTTTTTTTT',
+'T......f.......==.wwwwww.......TTTTTTTTT',
+'TTTTTTT..f.....==.wwwwww.TTTTTTTTTTTTTTT',
+'TTTTTTT==================TTTTTTTTTTTTTTT',
+'TTTTTTT==================TTTTTTTTTTTTTTT',
+'TTTTTTTLLLL.S.====.LLLLLLTTTTTTTTTTTTTTT',
+'TTTTTTTwwwwww.====.wwwwwwTTTTTTTTTTTTTTT',
+'TTTTTTTwwwwww.====.wwwwwwTTTTTTTTTTTTTTT',
+'TTTTTTTwwww.f.====.f.wwwwTTTTTTTTTTTTTTT',
+'TTTTTTTwwwwf...ww....wwwwTTTTTTTTTTTTTTT',
+'TTTTTTTFFFFFFFFwwFFFFFFFFTTTTTTTTTTTTTTT',
+'TTTTTTT.......IwwI.......TTTTTTTTTTTTTTT',
+'TTTTTTTTTTTTT.IwwI.TTTTTTTTTTTTTTTTTTTTT',
+'TTTTTTTTTTTTT.IwwI.TTTTTTTTTTTTTTTTTTTTT',
+];
+const LEG={'T':TRE,'.':G,'=':PATH,'w':TALL,'f':FLW,'F':FEN,'I':FENV,'S':SIGN,'L':LEDGE,'~':WAT,'o':BUSH,'B':BOARD,'M':MAILBOX,'K':KIOSK,'O':FNT,'c':APRON,'X':HELIPAD};
+const GATE_Y=24;                       // fence line between ALAM TOWN (north) and SOUTH ROAD
+const PAD={x:34,y:7,n:4};              // 4×4-tile helicopter pad on the airfield
+const zoneAt=(x,y)=>y>=GATE_Y?'SOUTH ROAD':x>=33?'AIRFIELD':'ALAM TOWN';
+const START={x:16,y:30};
+let W=40,H=ROWS.length;
+let map=new Array(W*H).fill(G),bidx=new Array(W*H).fill(-1);
+let interior=null;                     // null = outdoors
+const at=(x,y)=>(x<0||y<0||x>=W||y>=H)?(interior?WALLI:TRE):map[y*W+x];
+
+const BLD=[
+  {id:'home',ch:'H',roof:'#e05848',roof2:'#b83c38',wall:'#f8f0d8',label:"FAHADBIN's HOUSE",em:null},
+  {id:'lab', ch:'W',roof:'#6878a0',roof2:'#485880',wall:'#f0f0f4',label:'THE WORKSHOP',em:'gear'},
+  {id:'army',ch:'A',roof:'#6c8848',roof2:'#4c6830',wall:'#e8e0c0',label:'82nd AIRBORNE',em:'star'},
+  {id:'drex',ch:'D',roof:'#4078d8',roof2:'#2858a8',wall:'#f8f0d0',label:'DREXEL UNIVERSITY',em:'cap'},
+  {id:'mssa',ch:'C',roof:'#f08848',roof2:'#c86430',wall:'#f8f8f8',label:'MSSA CENTER',em:'cloud'},
+  {id:'owr', ch:'R',roof:'#38a868',roof2:'#207848',wall:'#f0f8f0',label:'ONE WORLD RELIEF',em:'heart'},
+  {id:'mart',ch:'m',roof:'#8858c8',roof2:'#6038a0',wall:'#f4f0f8',label:'BOOK MART',em:'book'},
+];
+ROWS.forEach((r,y)=>{if(r.length!==W)console.warn('map row '+y+' has length '+r.length);
+  for(let x=0;x<W;x++){const ch=r[x],bi=BLD.findIndex(b=>b.ch===ch);
+    if(bi>=0){const b=BLD[bi];map[y*W+x]=WALL;bidx[y*W+x]=bi;
+      if(b.x===undefined){b.x=x;b.y=y;b.x2=x;b.y2=y;}b.x=Math.min(b.x,x);b.x2=Math.max(b.x2,x);b.y2=Math.max(b.y2,y);}
+    else map[y*W+x]=LEG[ch]!==undefined?LEG[ch]:G;}});
+BLD.forEach(b=>{b.w=b.x2-b.x+1;b.h=b.y2-b.y+1;b.dx=b.x+Math.floor(b.w/2);b.dy=b.y+b.h-1;map[b.dy*W+b.dx]=DOOR;});
+
+/* Trees are 2×2-tile blocks anchored at odd x / even y; anything off the map is forest too. */
+const treeBlock=(ax,ay)=>!interior&&at(ax,ay)===TRE&&at(ax+1,ay)===TRE&&at(ax,ay+1)===TRE&&at(ax+1,ay+1)===TRE;
+
+const PROJ=[{x:23,y:12,i:0},{x:28,y:12,i:1},{x:23,y:14,i:2},{x:28,y:14,i:3}];
+const FOUNT={x:17,y:11};
+let SIGNS={
+  '17,7':`THE WORKSHOP\nThree crystals inside: PROJECTS, RÉSUMÉ and EXPERIENCE.`,
+  '25,7':`82nd AIRBORNE DIVISION\nU.S. Army · June 2020 – June 2025`,
+  '30,7':`AIRFIELD →\nBoard the helicopter and parachute into town — the way FAHADBIN did with the 82nd AIRBORNE.`,
+  '11,10':`ALAM TOWN\n"Where every career has a beginning."`,
+  '4,16':`DREXEL UNIVERSITY\nPhiladelphia, PA`,
+  '14,17':`↑ TOWN SQUARE · THE WORKSHOP\n← DREXEL      → PROJECT PARK\n↗ AIRFIELD   ↓ SOUTH ROAD`,
+  '24,17':`↑ PROJECT PARK\nFour kiosks, one for each thing he built. Press ${ACT} at any kiosk.`,
+  '12,29':`SOUTH ROAD\n↑ ALAM TOWN — home of FAHADBIN ALAM`,
+};
+let NPC=[
+  {x:14,y:7,s:'mentor',name:'THE MENTOR',dir:'down',lines:n=>[`Hey ${n}, welcome to Alam Town!`,`This town is home to FAHADBIN ALAM — a U.S. Army veteran and Computer Science student at Drexel who builds full-stack software.`,`Explore the town. Every building, kiosk and sign holds part of his story.`,`Step inside the workshop behind me. Three crystals are waiting: PROJECTS, RÉSUMÉ and EXPERIENCE. Collect all three!`,`In a hurry? Press the RÉSUMÉ button at the top right any time.`]},
+  {x:27,y:7,s:'sgt',name:'SERGEANT',dir:'down',lines:n=>[`Hooah! Looking for SGT ALAM? He served in the 82nd AIRBORNE from June 2020 to June 2025.`,`Communications Systems Specialist. He automated Cisco configuration in Python across 10+ devices — deployment went from 3 hours to 30 minutes.`,`Step inside the barracks for the full record. Then head east to the AIRFIELD and jump like he did!`]},
+  {x:6,y:16,s:'prof',name:'DREXEL PROF',dir:'down',lines:n=>[`Fahadbin? One of my Computer Science students — with minors in Mathematics, Data Science, and Electrical & Computer Engineering.`,`He already holds a CCNA, Security+, Network+ and A+. Four certifications!`]},
+  {x:9,y:22,s:'kid',name:'STUDENT',dir:'down',lines:n=>[`Have you seen the PROJECT PARK east of the square? Four kiosks, one for each thing he built!`,`PATH OF THE SAHABAH — the Roblox game — is my favorite.`]},
+  {x:12,y:12,s:'lass',name:'TOURIST',dir:'right',lines:n=>[`This square is so peaceful. The bulletin board by the fountain has all of Fahadbin's links.`]},
+  {x:24,y:22,s:'vol',name:'VOLUNTEER',dir:'down',lines:n=>[`Fahadbin founded ONE WORLD RELIEF — a nonprofit that supports orphans and builds water wells.`,`He built its donation platform himself: $20K+ processed across 50+ donations. Go inside and see!`]},
+  {x:18,y:22,s:'lass2',name:'READER',dir:'down',lines:n=>[`Did you know he wrote a book? It's called THE IVORY. The Book Mart sells it!`,`The clerk says he was an Airbnb host, too — and automated the whole operation in Python.`]},
+  {x:6,y:7,s:'mom',name:'NEIGHBOR',dir:'down',lines:n=>[`Oh, hi ${n}! Fahadbin is out at the workshop again.`,`If you need to reach him, his contact card is pinned on the fridge inside.`]},
+  {x:9,y:27,s:'guide',name:'GUIDE',dir:'down',lines:n=>[`Hi, ${n}! ALAM TOWN is just north of here — follow the sand path straight up.`,`Talk to people, read the signs and step into the buildings. Each one holds a piece of FAHADBIN ALAM's résumé.`,`And don't miss the AIRFIELD in the north-east corner. You can parachute into town!`]},
+  {x:33,y:10,s:'jump',name:'JUMPMASTER',dir:'up',lines:n=>[`Welcome to the AIRFIELD, ${n}.`,`FAHADBIN jumped out of aircraft with the 82nd AIRBORNE DIVISION. Today it's your turn.`,`Walk up to the helicopter and press ${ACT}. We fly you over town — you decide where to land.`]},
+];
+
+/* ═════════ INTERIORS ═════════ */
+const OUT={W,H,map,bidx,NPC,SIGNS};
+const CAPS=[{x:5,y:4,i:0},{x:7,y:4,i:1},{x:9,y:4,i:2}];
+const INT={
+  lab:{W:15,H:10,build(){const w=15,h=10,m=new Array(w*h).fill(FLOOR);const S=(x,y,v)=>m[y*w+x]=v;
+    for(let x=0;x<w;x++){S(x,0,WALLI);S(x,1,WALLI);}for(let y=0;y<h;y++){S(0,y,WALLI);S(w-1,y,WALLI);}
+    [1,2,3,11,12,13].forEach(x=>S(x,1,SHELF));for(let x=4;x<=10;x++)S(x,4,TABLE);S(12,5,DESK);S(2,6,DESK);
+    S(7,9,EXIT);return m;},
+    start:{x:7,y:8},npc:[{x:12,y:6,s:'mentor',name:'THE MENTOR',dir:'left',lines:n=>[`The three crystals on the table each hold a piece of FAHADBIN's story.`,`Walk up to one and press ${ACT} to open it.`]}],
+    signs:{'1,1':`Bookshelf: Python, TypeScript, C#, SQL... and one copy of THE IVORY.`,'2,1':`Bookshelf: CCNA, Security+, Network+ and A+ study guides — all four passed.`,'3,1':`Bookshelf: FastAPI, React Native, PostgreSQL and Docker handbooks, full of sticky notes.`,'12,5':`A desk covered in Cisco configuration printouts — and the Python script that automated them.`,'2,6':`A workstation showing MUSLIMO's CI pipeline: 95 backend pytest tests on every pull request.`}},
+  home:{W:13,H:10,build(){const w=13,h=10,m=new Array(w*h).fill(FLOOR);const S=(x,y,v)=>m[y*w+x]=v;
+    for(let x=0;x<w;x++){S(x,0,WALLI);S(x,1,WALLI);}for(let y=0;y<h;y++){S(0,y,WALLI);S(w-1,y,WALLI);}
+    S(2,1,FRIDGE);[3,4,9,10,11].forEach(x=>S(x,1,SHELF));for(let x=5;x<=7;x++)S(x,5,TABLE);S(6,9,EXIT);return m;},
+    start:{x:6,y:8},npc:[{x:3,y:4,s:'mom',name:'ROOMMATE',dir:'down',lines:n=>[`Come on in, ${n}! Make yourself at home.`,`Fahadbin's contact card is on the fridge if you need him.`]}],
+    signs:{'2,1':`FRIDGE NOTE\nfma52@drexel.edu · 856-870-7528\nlinktr.ee/fahadbin.alam`,'3,1':`Family photos and a framed Army Commendation Medal.`}}
+};
+/* ═════════ TILES (16×16, drawn 1:1) ═════════ */
+const SANDY=new Set([PATH,DOOR,FNT,BOARD,APRON,HELIPAD]);     // the road runs straight onto the airfield apron
+const isPath=t=>SANDY.has(t);
+const isFence=t=>t===FEN||t===FENV;
+
+/* ── grass: flat mint with small three-stroke tufts ── */
+const TUFT=[[0,0],[3,0],[6,0],[1,1],[5,1]];
+function tuft(c,x,y,col){TUFT.forEach(([i,j])=>Q(c,x+i,y+j,1,1,col));}
+const GV=[[[1,3,'gT'],[9,10,'gT']],[[6,6,'gT'],[8,13,'gL']],[[2,10,'gT'],[9,2,'gT']],[[7,12,'gT'],[1,5,'gL']]];
+function grassBase(c){Q(c,0,0,16,16,C.g);
+  if(ND)for(let y=0;y<16;y+=2)for(let x=(y&2)?1:0;x<16;x+=2)Q(c,x,y,1,1,C.ndot);}   // night: fine teal dither
+function grass(c,v){grassBase(c);GV[v&3].forEach(([x,y,k])=>tuft(c,x,y,C[k]));}
+
+/* ── sand path: per-pixel distance field → soft wavy light-green border, rounded corners ── */
+function nbMask(x,y,f){const P=(dx,dy)=>f(at(x+dx,y+dy))?1:0;
+  return P(0,-1)|P(1,0)<<1|P(0,1)<<2|P(-1,0)<<3|P(-1,-1)<<4|P(1,-1)<<5|P(1,1)<<6|P(-1,1)<<7;}
+function edgeDist(m,i,j,Rr){const u=m&1,r=m&2,d=m&4,l=m&8,ul=m&16,ur=m&32,dr=m&64,dl=m&128,fx=i+.5,fy=j+.5;let k=99;
+  if(!u)k=Math.min(k,fy);if(!d)k=Math.min(k,16-fy);if(!l)k=Math.min(k,fx);if(!r)k=Math.min(k,16-fx);
+  if(!u&&!l&&fx<Rr&&fy<Rr)k=Math.min(k,Rr-Math.hypot(Rr-fx,Rr-fy));
+  if(!u&&!r&&fx>16-Rr&&fy<Rr)k=Math.min(k,Rr-Math.hypot(fx-16+Rr,Rr-fy));
+  if(!d&&!l&&fx<Rr&&fy>16-Rr)k=Math.min(k,Rr-Math.hypot(Rr-fx,fy-16+Rr));
+  if(!d&&!r&&fx>16-Rr&&fy>16-Rr)k=Math.min(k,Rr-Math.hypot(fx-16+Rr,fy-16+Rr));
+  if(u&&l&&!ul)k=Math.min(k,Math.hypot(fx,fy));if(u&&r&&!ur)k=Math.min(k,Math.hypot(16-fx,fy));
+  if(d&&l&&!dl)k=Math.min(k,Math.hypot(fx,16-fy));if(d&&r&&!dr)k=Math.min(k,Math.hypot(16-fx,16-fy));
+  return k;}
+function pathPx(c,m,odd){const sand=[],nar=((!(m&8)&&!(m&2))||(!(m&1)&&!(m&4)))?.62:1;   // one-tile-wide strips get a slimmer edge
+  for(let j=0;j<16;j++)for(let i=0;i<16;i++){const d0=edgeDist(m,i,j,6),d=d0-((((i+j)>>2)&1)?0:.9),e=d0-((((i+j)>>1)&1)?0:.7);
+    const col=d<.3*nar?C.g:d<1.3*nar?C.b2:e<4.1*nar?C.b1:e<5*nar?C.b3:e<5.8*nar?C.sE:C.s;if(col===C.s)sand.push(j*16+i);Q(c,i,j,1,1,col);}
+  const S=new Set(sand),dot=(x,y,col)=>{if(S.has(y*16+x))Q(c,x,y,1,1,col);};
+  if(ND)for(let j=1;j<16;j+=4)for(let i=((j>>2)&1)?3:1;i<16;i+=4){dot(i,j,C.sD);if((i+j)%8===2)dot(i+1,j-1,C.sD);}
+  const bx=odd?8:1,by=odd?9:2;[[2,0],[0,2],[5,2],[4,4]].forEach(([i,j])=>dot(bx+i,by+j,C.sD));
+  (odd?[[3,4],[12,2]]:[[11,11],[13,6]]).forEach(([i,j])=>dot(i,j,C.sL));}
+function pathTile(x,y){const m=nbMask(x,y,isPath);return art('p'+m+'_'+(y&1),16,16,c=>pathPx(c,m,y&1));}
+
+/* ── pond ── */
+function waterPx(c,m,f){
+  for(let j=0;j<16;j++)for(let i=0;i<16;i++){const dd=edgeDist(m,i,j,5);
+    Q(c,i,j,1,1,dd<.4?C.g:dd<1.5?C.wK:dd<2.6?C.wD:C.w);}
+  const ok=(x,y)=>edgeDist(m,x,y,5)>=3.2,dash=(x,y,n)=>{for(let k=0;k<n;k++)if(ok(x+k,y))Q(c,x+k,y,1,1,k===0?C.wH:C.wL);};
+  dash(2+f*2,4,4);dash(9+f*2,9,4);dash(5-f,13,3);dash(11-f,2,2);}
+function waterTile(x,y,f){const m=nbMask(x,y,t=>t===WAT);return art('w'+m+'_'+f,16,16,c=>waterPx(c,m,f));}
+
+/* ── meadow plants: one leafy plant per tile, dark centre, light leaf tips ── */
+const TALLG=[
+'.......DD.......',
+'.DD...DHHD...DD.',
+'DHHD..DHHK..DLLD',
+'DLHHD.DHLK.DLLBK',
+'.DLHHLDLLKBLLBK.',
+'..DLLLDKBKBBMK..',
+'.DDDDDDKKKKKKKK.',
+'DHHHLLDKKKBBBBMK',
+'DLHLLBMKKKMBBMMK',
+'.DDLBBMKKKMMMKK.',
+'...DDDKKKKKKK...',
+'.DLLLBDKKKBBBMK.',
+'DLHLLBDKKKMBMMMK',
+'DLLBDD.KBMK.KMMK',
+'.DDD..KMMK...KK.',
+'.......KK.......'];
+const P_TALL={K:C.tK,D:C.tD,M:C.tM,B:C.tB,L:C.tL,H:C.tH};
+
+/* ── flowers: two red blossoms over green leaves ── */
+const FLOWER=[
+'................',
+'....XX.XX.......',
+'...XrrXrRX......',
+'..XrrRRRRX......',
+'..XRROORRXXX....',
+'...XROORXrrRX...',
+'..XRRRRXrrRRRX..',
+'..XRRXRXRROORX..',
+'...XXKXXRROORX..',
+'....KGgKXRRRRX..',
+'...KGgGGKXRRX...',
+'...KGGKKGKXXKK..',
+'....KKKGgGGKGgK.',
+'.......KGGKKGGK.',
+'........KK..KK..',
+'................'];
+const P_FLOWER={R:C.rR,r:C.rL,X:C.rK,O:C.rO,G:C.lf,g:C.lfL,K:C.lfK};
+
+/* ── white picket fence (two rounded pickets per tile, rail behind, shadow on the grass) ── */
+const FENCE_H=[
+'................',
+'................',
+'..KKKK....KKKK..',
+'.KWWWWK..KWWWWK.',
+'.KWWWWK..KWWWWK.',
+'.KWLLLK..KWLLLK.',
+'KKLBBbKKKKLBBbKK',
+'WKLBBbKWWKLBBbKW',
+'KKLBBbKKKKLBBbKK',
+'KKLBBbKKKKLBBbKK',
+'.KLBBbK..KLBBbK.',
+'.KBBbbK..KBBbbK.',
+'.KKKKKKS.KKKKKKS',
+'..SSSSSS..SSSSSS',
+'...SSSSS...SSSSS',
+'....SSSS....SSSS'];
+const P_FENCE={K:C.fK,W:C.fW,L:C.fL,B:C.fB,b:C.fb,S:C.fS};
+function fenvSide(x,y){let yy=y;while(at(x,yy)===FENV)yy--;
+  if(at(x,yy)===FEN){if(!isFence(at(x+1,yy)))return 9;if(!isFence(at(x-1,yy)))return 1;}return 1;}
+function railV(c,xo,y0,y1){for(let y=y0;y<=y1;y++){Q(c,xo,y,1,1,C.fK);Q(c,xo+1,y,1,1,C.fL);Q(c,xo+2,y,2,1,C.fW);Q(c,xo+4,y,1,1,C.fb);Q(c,xo+5,y,1,1,C.fK);Q(c,xo+6,y,1,1,C.fS);}}
+function fenceH(c,x,y){grass(c,hash(x,y)&3);stamp(c,FENCE_H,P_FENCE);
+  if(!isFence(at(x-1,y))||at(x-1,y)===FENV)Q(c,0,6,1,4,C.g);
+  if(!isFence(at(x+1,y))||at(x+1,y)===FENV)Q(c,15,6,1,4,C.g);
+  if(at(x,y+1)===FENV){const xo=fenvSide(x,y+1);Q(c,xo,12,8,4,C.g);railV(c,xo,12,15);}}
+function fenceV(c,x,y){grass(c,hash(x,y)&3);const xo=fenvSide(x,y),cont=isFence(at(x,y+1));
+  railV(c,xo,0,cont?15:11);Q(c,xo+1,5,4,1,C.fK);Q(c,xo+1,6,4,1,C.fB);
+  if(cont){Q(c,xo+1,13,4,1,C.fK);Q(c,xo+1,14,4,1,C.fB);}
+  else{Q(c,xo,12,6,1,C.fK);Q(c,xo+2,13,6,1,C.fS);Q(c,xo+3,14,4,1,C.fS);}}
+
+/* ── signpost (white board, red lettering) ── */
+const SIGNG=[
+'..KK........KK..',
+'.KKKKKKKKKKKKKK.',
+'.KWWWWWWWWWWWWK.',
+'.KWWWWWWWWWWWWK.',
+'.KLLLLLLLLLLLLK.',
+'.KLTLTTLTTLTLLK.',
+'.KLTTLTLLTTTLLK.',
+'.KLLTLTTLTLTLLK.',
+'.KLLLLLLLLLLLLK.',
+'.KbbbbbbbbbbbbK.',
+'.KKKKKKKKKKKKKK.',
+'..KbK......KbK..',
+'..KbK......KbK..',
+'.SKKKSSSSSSKKKS.',
+'..SSSSSSSSSSSS..',
+'................'];
+const P_SIGN={K:C.nK,W:C.nW,L:C.nL,b:C.nb,T:C.nT,S:C.fS};
+
+/* ── ledge: brown scalloped rock strip in the lower half of the tile ── */
+function ledgeT(c,x,y){grassBase(c);tuft(c,4,2,C.gT);
+  const Lf=at(x-1,y)===LEDGE,Rt=at(x+1,y)===LEDGE;
+  for(let i=0;i<16;i++){const m=i%8,hi=(m>=6||m<=1);let top=hi?8:9,bot=15,cap=false;       // 8-px rock bumps
+    if(!Lf){if(i===0){top=11;bot=13;cap=true;}else if(i===1){top=10;bot=14;}}
+    if(!Rt){if(i===15){top=11;bot=13;cap=true;}else if(i===14){top=10;bot=14;}}
+    for(let j=top;j<=bot;j++){let col;
+      if(cap||j===top||j===bot)col=C.lK;else if(j===bot-1)col=C.lD;
+      else if(j<=10&&m>=1&&m<=3)col=C.lH;else if(m===5&&j<=12)col=C.lD;else col=C.lM;
+      Q(c,i,j,1,1,col);}}}
+
+/* ── small round shrub ── */
+const SHRUB=[
+'................',
+'.....KKKKKK.....',
+'...KKHHLLLLKK...',
+'..KHHHLLLLMMMK..',
+'.KHHLLLLLMMMMMK.',
+'.KHLLLLLMMMMMDK.',
+'KHLLLLLMMMMMMDDK',
+'KLLLLLMMMMMMDDDK',
+'KLLLMMMMMMMDDDDK',
+'KLMMMMMMMMDDDDDK',
+'.KMMMMMMDDDDDDK.',
+'.KKMMMDDDDDDKKK.',
+'...KKKKwvKKKK...',
+'....SSKwvKSSS...',
+'....SSKKKKSSS...',
+'................'];
+const P_SHRUB={K:C.eK,H:C.eH,L:C.eL,M:C.eM,D:C.eD,w:C.wd,v:C.wdD,S:C.gS};
+
+/* ── bulletin board, mailbox, project kiosk ── */
+const BOARDG=[
+'................',
+'.KKKKKKKKKKKKKK.',
+'.KwwwwwwwwwwwwK.',
+'.KwPPPPPPPPPPwK.',
+'.KwPrrPbbPggPwK.',
+'.KwPrrPbbPggPwK.',
+'.KwPPPPPPPPPPwK.',
+'.KwPyyyPPrrrPwK.',
+'.KwPPPPPPPPPPwK.',
+'.KvvvvvvvvvvvvK.',
+'.KKKKKKKKKKKKKK.',
+'...KwK....KwK...',
+'...KvK....KvK...',
+'..DKKKDDDDKKKD..',
+'................',
+'................'];
+const P_BOARD={K:'#503820',w:'#c89050',v:'#a06c38',P:'#f8f0d0',r:'#e05048',b:'#4878d8',g:'#38a860',y:'#e8a830',D:C.sD};
+const MAILG=[
+'................',
+'................',
+'....KKKKKKKK....',
+'...KrrrrrrrrK...',
+'...KRRRRRRRRK...',
+'...KRWWWWWWRK...',
+'...KRRRRRRRRK...',
+'...KDDDDDDDDK...',
+'...KKKKKKKKKK...',
+'......KwvK......',
+'......KwvK......',
+'......KwvK......',
+'......KwvK......',
+'.....SKKKKSS....',
+'.....SSSSSSS....',
+'................'];
+const P_MAIL={K:'#402830',R:'#e04848',r:'#f88070',D:'#b02c3c',W:'#f8f8f8',w:C.wd,v:C.wdD,S:C.fS};
+const KIOSKG=[
+'................',
+'.KKKKKKKKKKKKKK.',
+'.KwwwwwwwwwwwwK.',
+'.KwcccccccccccK.',
+'.KwCCCCCCCCCCvK.',
+'.KwCCCCCCCCCCvK.',
+'.KwCCCCCCCCCCvK.',
+'.KwCCCCCCCCCCvK.',
+'.KwCCCCCCCCCCvK.',
+'.KwvvvvvvvvvvvK.',
+'.KKKKKKKKKKKKKK.',
+'...KwK....KwK...',
+'...KvK....KvK...',
+'..SKKKSSSSKKKS..',
+'..SSSSSSSSSSSS..',
+'................'];
+const KICON=[
+ ['.WW..WW.','W..WW..W','W..WW..W','W..WW..W','WWWWWWWW'],          // open book — Muslimo
+ ['.WWWWWW.','WW.WWW.W','W...W.WW','WW.WWWWW','W.W..W.W'],          // gamepad — Path of the Sahabah
+ ['.WW..WW.','WWWWWWWW','.WWWWWW.','..WWWW..','...WW...'],          // heart — donation platform
+ ['WW....WW','WW.WW.WW','..WWWW..','WW.WW.WW','WW....WW'],          // network nodes — automation
+];
+function kioskT(c,x,y){grass(c,hash(x,y)&3);const k=PROJ.find(k=>k.x===x&&k.y===y)||{i:0},col=KIOSKS[k.i].c;
+  stamp(c,KIOSKG,{K:'#503820',w:'#c89050',v:'#a06c38',C:col,c:shade(col,45),S:C.fS});stamp(c,KICON[k.i],{W:'#ffffff'},4,4);}
+
+/* ── airfield: concrete apron with a painted boundary line, and the helicopter pad marking ── */
+const AP={b:'#c6cad2',l:'#d6dae2',s:'#b0b4be',e:'#8a8e9c',y:'#f0c838',w:'#f8f8fc'};
+function apronPx(c,x,y){const paved=t=>t===APRON||t===HELIPAD||t===PATH;
+  Q(c,0,0,16,16,AP.b);Q(c,0,15,16,1,AP.s);Q(c,15,0,1,16,AP.s);Q(c,0,0,15,1,AP.l);Q(c,0,0,1,15,AP.l);
+  [[4,5],[11,9],[7,12]].forEach(([i,j])=>Q(c,i,j,1,1,AP.s));
+  if(!paved(at(x,y-1))){Q(c,0,0,16,1,AP.e);Q(c,0,1,16,1,AP.y);}
+  if(!paved(at(x,y+1))){Q(c,0,15,16,1,AP.e);Q(c,0,14,16,1,AP.y);}
+  if(!paved(at(x-1,y))){Q(c,0,0,1,16,AP.e);Q(c,1,0,1,16,AP.y);}
+  if(!paved(at(x+1,y))){Q(c,15,0,1,16,AP.e);Q(c,14,0,1,16,AP.y);}}
+function padPx(c,x,y,letter){apronPx(c,x,y);const ox=(x-PAD.x)*16,oy=(y-PAD.y)*16;   // the H only shows while the helicopter is away
+  for(let j=0;j<16;j++)for(let i=0;i<16;i++){const X=ox+i,Y=oy+j,r=Math.hypot(X+.5-32,Y+.5-32);
+    if(r>=27&&r<29.6)Q(c,i,j,1,1,AP.y);
+    else if(letter&&(((X>=22&&X<=25)||(X>=38&&X<=41))&&Y>=20&&Y<=43))Q(c,i,j,1,1,AP.w);
+    else if(letter&&X>=22&&X<=41&&Y>=30&&Y<=33)Q(c,i,j,1,1,AP.w);}}
+
+/* ── interior: off-white walls with a slate band, wooden pillars, round windows, wood-plank floor ── */
+function tatami(c,y){Q(c,0,0,16,16,'#c79a66');for(let j=0;j<16;j+=4){Q(c,0,j,16,1,'#a87c4c');Q(c,0,j+1,16,1,'#d6ab78');}
+  const o=(y%2)?5:11;for(let j=0;j<16;j+=4){const sx=(o+j*2)%16;Q(c,sx,j+1,1,3,'#a87c4c');}}
+function iwall(c,x,y){
+  const side=(x===0||x===W-1);
+  if(side&&y>=1){Q(c,0,0,16,16,'#383030');Q(c,x===0?14:0,0,2,16,'#584840');return;}
+  if(y===0){Q(c,0,0,16,16,'#e6e1d6');Q(c,0,0,16,3,'#2f4858');Q(c,0,3,16,1,'#1f3140');Q(c,0,15,16,1,'#cfc8b8');
+    if(x%6===2||x%6===4){Q(c,4,5,8,10,'#685030');Q(c,3,6,10,8,'#685030');Q(c,5,6,6,8,'#88c8c0');Q(c,4,7,8,6,'#88c8c0');Q(c,7,6,2,8,'#487878');Q(c,4,9,8,2,'#487878');Q(c,5,7,2,2,'#c8f0e8');}}
+  else{Q(c,0,0,16,16,'#ece7dc');Q(c,0,0,16,1,'#cfc8b8');Q(c,0,11,16,1,'#1f3140');Q(c,0,12,16,3,'#2f4858');Q(c,0,12,16,1,'#46677a');Q(c,0,15,16,1,'#1f3140');}
+  if(x%6===0&&!side){Q(c,5,0,6,16,'#584020');Q(c,6,0,4,16,'#a87038');Q(c,7,0,1,16,'#c89050');for(let j=2;j<16;j+=5){Q(c,6,j,4,1,'#805028');Q(c,8,j+1,2,1,'#805028');}}
+}
+
+/* ── tile lookup: returns the cached 16×16 canvas for a map cell ── */
+function tileArt(id,x,y,fr){const v=hash(x,y)&3,rm=interior?interior.id:'';
+  switch(id){
+    case PATH:case FNT:return pathTile(x,y);
+    case APRON:return art('ap'+x+'_'+y,16,16,c=>apronPx(c,x,y));
+    case HELIPAD:{const on=heliOnPad();return art('pad'+x+'_'+y+(on?'':'h'),16,16,c=>padPx(c,x,y,!on));}
+    case TALL:return art('tall',16,16,c=>{grassBase(c);stamp(c,TALLG,P_TALL);});
+    case WAT:return waterTile(x,y,fr);
+    case FEN:return art('fh'+x+'_'+y,16,16,c=>fenceH(c,x,y));
+    case FENV:return art('fv'+x+'_'+y,16,16,c=>fenceV(c,x,y));
+    case FLW:return art('fl'+fr,16,16,c=>{grassBase(c);stamp(c,FLOWER.slice(0,9),P_FLOWER,fr,0);stamp(c,FLOWER.slice(9),P_FLOWER,0,9);});
+    case SIGN:return art('sg',16,16,c=>{grass(c,1);stamp(c,SIGNG,P_SIGN);});
+    case LEDGE:return art('lg'+(at(x-1,y)===LEDGE?1:0)+(at(x+1,y)===LEDGE?1:0),16,16,c=>ledgeT(c,x,y));
+    case BUSH:return art('sh',16,16,c=>{grassBase(c);stamp(c,SHRUB,P_SHRUB);});
+    case BOARD:return art('bd'+x+'_'+y,16,16,c=>{pathPx(c,nbMask(x,y,isPath),y&1);stamp(c,BOARDG,P_BOARD);});
+    case MAILBOX:return art('mb',16,16,c=>{grass(c,1);stamp(c,MAILG,P_MAIL);});
+    case KIOSK:return art('ki'+x+'_'+y,16,16,c=>kioskT(c,x,y));
+    case FLOOR:return art('tat'+(y%2),16,16,c=>tatami(c,y),1);
+    case RUG:return art('rug'+(y%2),16,16,c=>{tatami(c,y);Q(c,0,0,16,16,'#c85048');Q(c,0,0,16,1,'#e8c050');Q(c,0,15,16,1,'#e8c050');},1);
+    case WALLI:return art('iw'+rm+x+'_'+y,16,16,c=>iwall(c,x,y),1);
+    case TABLE:return art('tb'+(y%2),16,16,c=>{tatami(c,y);Q(c,0,1,16,12,'#383028');Q(c,0,2,16,10,'#c8b060');Q(c,0,2,16,2,'#e0d088');Q(c,0,10,16,2,'#a08840');Q(c,1,13,2,3,'#383028');Q(c,13,13,2,3,'#383028');},1);
+    case EXIT:return art('ex'+(y%2),16,16,c=>{tatami(c,y);Q(c,1,4,14,11,'#383028');Q(c,2,5,12,9,'#c86838');Q(c,3,6,10,7,'#e89058');for(let i=4;i<12;i+=2)Q(c,i,7,1,5,'#c86838');},1);
+    case SHELF:return art('bk'+rm+x,16,16,c=>{iwall(c,x,1);Q(c,1,0,14,16,'#383028');Q(c,2,1,12,14,'#c08848');Q(c,2,1,12,1,'#e0b070');Q(c,3,3,10,4,'#a07038');Q(c,3,9,10,4,'#a07038');Q(c,3,3,10,1,'#583818');Q(c,3,9,10,1,'#583818');Q(c,7,5,2,1,'#e8d0a0');Q(c,7,11,2,1,'#e8d0a0');},1);
+    case FRIDGE:return art('fr',16,16,c=>{iwall(c,3,1);Q(c,3,0,10,16,'#383028');Q(c,4,1,8,14,'#e8ecf4');Q(c,4,6,8,1,'#b0b8c8');Q(c,10,3,1,2,'#808898');Q(c,10,8,1,3,'#808898');Q(c,5,2,4,3,'#f8d048');},1);
+    case DESK:return art('dk'+(y%2),16,16,c=>{tatami(c,y);Q(c,0,3,16,11,'#383028');Q(c,1,4,14,9,'#c08848');Q(c,1,4,14,1,'#e0b070');Q(c,3,0,10,8,'#383028');Q(c,4,1,8,6,'#9898e8');Q(c,5,2,3,1,'#d0d0f8');Q(c,8,4,3,1,'#d0d0f8');},1);
+    default:return art('g'+v,16,16,c=>grass(c,v));
+  }
+}
+/* ═════════ OBJECTS: trees, buildings, fountain, crystals ═════════ */
+
+/* Tall three-tier evergreen, 32×48: the lower 32 px sit on a 2×2-tile footprint, the top 16 px overlap the row above. */
+function treeArt(){return art('tree',32,48,c=>{
+  const g=grid(32,48),cx=16,FOL=new Set([C.eH,C.eL,C.eM,C.eD]);
+  for(let y=41;y<48;y++)for(let x=1;x<31;x++){const ex=(x+.5-cx)/14.5,ey=(y+.5-44.5)/3.4;if(ex*ex+ey*ey<=1)g[y][x]=C.gS;}
+  for(let y=38;y<46;y++){for(let x=14;x<18;x++)g[y][x]=x<16?C.wd:C.wdD;g[y][13]=C.eK;g[y][18]=C.eK;}
+  for(let x=13;x<19;x++)g[46][x]=C.eK;
+  const tiers=[[20,40,9.6,15.9],[9,27,5.4,14.5],[1,15,.6,11.4]];
+  tiers.forEach(([t,b,w0,w1],ti)=>{
+    const bot=x=>b-Math.round(2.6*Math.abs(((x+ti*2)%6)-3)/3),hwAt=y=>w0+(w1-w0)*Math.pow((y-t)/(b-t),.78);
+    for(let x=0;x<32;x++){const yb=bot(x),dx=x+.5-cx;
+      for(let y=t;y<=yb;y++){const f=(y-t)/(b-t),hw=hwAt(y);if(Math.abs(dx)>hw)continue;
+        const sc=1-1.25*f-.55*dx/hw+(((x+ti*3)%4<2)?.09:-.09);
+        g[y][x]=sc>.8?C.eH:sc>.26?C.eL:sc>-.36?C.eM:C.eD;}
+      if(Math.abs(dx)<=hwAt(yb)){if(yb+1<48&&FOL.has(g[yb+1][x]))g[yb+1][x]=C.eK;if(yb+2<48&&FOL.has(g[yb+2][x]))g[yb+2][x]=C.eD;}}
+  });
+  const solid=v=>v&&v!==C.gS&&v!==C.eK,edge=[];
+  for(let y=0;y<48;y++)for(let x=0;x<32;x++){const v=g[y][x];if(v&&v!==C.gS)continue;
+    if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{const yy=y+dy,xx=x+dx;return yy>=0&&yy<48&&xx>=0&&xx<32&&solid(g[yy][xx]);}))edge.push([x,y]);}
+  edge.forEach(([x,y])=>g[y][x]=C.eK);
+  blit(c,g);});}
+
+/* Building emblems (7×7) shown on a small board above each door */
+const EMB={
+ gear:['..W.W..','.WWWWW.','WW...WW','.W...W.','WW...WW','.WWWWW.','..W.W..'],
+ star:['...W...','...W...','WWWWWWW','.WWWWW.','..WWW..','.WW.WW.','.W...W.'],
+ cap:['...W...','.WWWWW.','WWWWWWW','.WWWWWW','..WWW.W','..WWW.W','.......'],
+ cloud:['.......','..WW...','.WWWWW.','WWWWWWW','WWWWWWW','.WWWWW.','.......'],
+ heart:['.......','.WW.WW.','WWWWWWW','WWWWWWW','.WWWWW.','..WWW..','...W...'],
+ book:['.......','WWW.WWW','W.WWW.W','W.WWW.W','W.WWW.W','WWWWWWW','.......'],
+};
+const BHEAD=8;   // head-room above the footprint for ridge / chimney
+function buildingArt(b){const w=b.w*16,h=b.h*16;
+  return art('bld'+b.id,w,h+BHEAD,c=>{c.save();c.translate(0,BHEAD);
+    const o=C.o,rh=b.h>=5?40:b.h===4?30:22,rf=b.roof,rfL=shade(rf,40),rfD=b.roof2,wl=b.wall;
+    // wall
+    Q(c,1,rh-2,w-2,h-rh+2,o);Q(c,2,rh-2,w-4,h-rh+1,wl);
+    for(let j=rh+7;j<h-6;j+=5)Q(c,2,j,w-4,1,shade(wl,-20));
+    Q(c,2,rh,w-4,2,shade(wl,-60));Q(c,2,rh+2,w-4,1,shade(wl,-28));
+    Q(c,2,h-5,w-4,4,'#b0a8a0');Q(c,2,h-5,w-4,1,'#d8d0c8');Q(c,2,h-2,w-4,1,'#8c8478');
+    for(let i=7;i<w-4;i+=8)Q(c,i,h-4,1,2,'#8c8478');
+    // windows
+    const dxk=b.dx-b.x,wy=rh+(b.h>=4?7:5),gl=ND?C.lit:'#68a0e8',gh=ND?C.litH:'#a8d0f8';
+    for(let k=0;k<b.w;k++){if(k===dxk||(b.w>=5&&(k===0||k===b.w-1)))continue;const x=k*16+3;
+      Q(c,x,wy,11,9,o);Q(c,x+1,wy+1,9,7,gl);Q(c,x+5,wy+1,1,7,'#f8f8f8');Q(c,x+1,wy+4,9,1,'#f8f8f8');
+      Q(c,x+1,wy+1,2,1,gh);Q(c,x+1,wy+2,1,1,gh);Q(c,x+6,wy+1,2,1,gh);Q(c,x+6,wy+2,1,1,gh);
+      Q(c,x,wy+9,11,1,shade(wl,-40));}
+    // door
+    const dx=dxk*16+2,dy=h-15;
+    Q(c,dx,dy,12,15,o);Q(c,dx+1,dy+1,10,14,'#8c5830');Q(c,dx+2,dy+2,8,13,'#b87848');Q(c,dx+2,dy+2,8,1,'#d89c60');
+    Q(c,dx+3,dy+4,2,4,'#986038');Q(c,dx+7,dy+4,2,4,'#986038');Q(c,dx+3,dy+9,2,4,'#986038');Q(c,dx+7,dy+9,2,4,'#986038');Q(c,dx+8,dy+8,1,2,'#f8d868');
+    // emblem board above the door
+    if(b.em){const ex=dxk*16+3,ey=rh+(b.h>=5?8:b.h===4?5:1);
+      Q(c,ex,ey,11,9,o);Q(c,ex+1,ey+1,9,7,'#f8f8f0');stamp(c,EMB[b.em],{W:b.roof2},ex+2,ey+1);}
+    // roof: bevelled top corners, shingle rows, dark eave
+    for(let j=-4;j<rh;j++){const ins=j<0?-j:0,x0=ins,x1=w-ins-1,band=Math.floor((j+4)/5),ph=(j+4)%5;
+      let col=rf;if(j<=-3)col=rfL;else if(j>=rh-3)col=rfD;else if(ph===4)col=rfD;
+      Q(c,x0,j,x1-x0+1,1,col);
+      if(j>-3&&j<rh-3&&ph!==4){for(let x=x0+2+((band*4)%8);x<x1-1;x+=8)Q(c,x,j,1,1,rfD);if(ph===0)for(let x=x0+5+((band*4)%8);x<x1-3;x+=8)Q(c,x,j,2,1,rfL);}
+      if(j>-3&&j<rh-1){Q(c,x0+1,j,1,1,rfL);Q(c,x1-1,j,1,1,rfD);}
+      Q(c,x0,j,1,1,o);Q(c,x1,j,1,1,o);}
+    Q(c,4,-4,w-8,1,o);Q(c,0,rh-1,w,1,o);
+    if(b.id==='home'){const cxh=w-15;Q(c,cxh,-8,8,11,o);Q(c,cxh+1,-7,6,9,'#b06858');Q(c,cxh+1,-7,6,1,'#dc9480');Q(c,cxh+1,-4,6,1,'#8c4840');Q(c,cxh+1,-1,6,1,'#8c4840');Q(c,cxh+4,-6,1,2,'#8c4840');Q(c,cxh+2,-3,1,2,'#8c4840');}
+    c.restore();});}
+
+/* Town-square fountain, 32×32, three ripple frames */
+function fountainArt(f){return art('fnt'+f,32,32,c=>{const g=grid(32,32),K='#585c74';
+  const E=(cx,cy,rx,ry,col,only)=>{for(let y=0;y<32;y++)for(let x=0;x<32;x++){const ex=(x+.5-cx)/rx,ey=(y+.5-cy)/ry;if(ex*ex+ey*ey<=1&&(!only||g[y][x]===only))g[y][x]=col;}};
+  E(16,21.5,15.6,9.8,C.sD);                                   // soft ground shadow
+  E(16,19,15,10.5,K);E(16,19,14,9.5,'#a4a8bc');E(16,18,14,8.6,'#d4d8e8');   // stone rim: light top, shaded front
+  E(16,17.6,11.6,6.9,K);E(16,17.8,10.6,6,C.w);E(16,16.6,10.6,4.9,C.wL,C.w);E(16,18.4,10.2,5.4,C.w,C.wL);
+  const ring=[[5.5,2.6],[7.5,3.6],[9.3,4.6]][f];
+  for(let a=0;a<64;a++){const x=Math.round(15.5+Math.cos(a/64*6.283)*ring[0]),y=Math.round(18+Math.sin(a/64*6.283)*ring[1]);if(g[y]&&(g[y][x]===C.w||g[y][x]===C.wL)&&(a%4<2))g[y][x]=C.wH;}
+  for(let y=7;y<19;y++){g[y][13]=K;g[y][18]=K;g[y][14]='#eceef8';g[y][15]='#d4d8e8';g[y][16]='#d4d8e8';g[y][17]='#a4a8bc';}
+  for(let x=13;x<19;x++)g[19][x]=K;
+  for(let x=10;x<22;x++){g[4][x]=K;g[5][x]=x<13?'#eceef8':x<19?'#d4d8e8':'#a4a8bc';g[6][x]=x<19?'#a4a8bc':'#8c90a8';g[7][x]=K;}g[5][9]=K;g[6][9]=K;g[5][22]=K;g[6][22]=K;
+  const jet=[[15,1],[16,2],[12,2+f%2],[19,2+(f+1)%2],[11,3],[20,3]];jet.forEach(([x,y])=>{g[y][x]=C.wH;});g[3][15]=C.wL;g[3][16]=C.wH;
+  blit(c,g);});}
+
+/* Crystal floating over the workshop table (12×14): a faceted gem in its own colour; dimmed with a check once collected */
+const CRYS=[
+'.....KK.....',
+'....KHHK....',
+'...KHHLMK...',
+'..KHHLLMMK..',
+'.KHHLLLMMDK.',
+'.KHWLLLMMDK.',
+'.KHWLLLMMDK.',
+'.KHLLLLMMDK.',
+'.KLLLLMMMDK.',
+'.KLLLMMMDDK.',
+'..KLLMMDDK..',
+'...KLMMDK...',
+'....KMDK....',
+'.....KK.....'];
+const TICK=['.GGG.','GGGGW','GWGWG','GGWGG','.GGG.'];
+function crystalArt(col,done){return art('cry'+col+(done?1:0),12,14,c=>{
+  if(done)c.globalAlpha=.5;
+  stamp(c,CRYS,{K:'#30283c',W:'#ffffff',H:shade(col,95),L:shade(col,45),M:col,D:shade(col,-55)});c.globalAlpha=1;
+  if(done)stamp(c,TICK,{G:'#2c9c58',W:'#ffffff'},7,0);},1);}
+
+/* ═════════ AIRFIELD ART: helicopter seen from above (nose west), parachute canopy, clouds ═════════ */
+const HB={K:'#2c3420',B:'#6c8048',L:'#94a868',D:'#4c5c30',d:'#3c4a26',G:'#283850',H:'#7898c0',R:'#343840'},HS=64,HUB={x:29,y:32};
+function heliBody(){return art('heliB',HS,HS,c=>{const g=grid(HS,HS);
+  const E=(cx,cy,rx,ry,col,ok)=>{for(let y=0;y<HS;y++)for(let x=0;x<HS;x++){const ex=(x+.5-cx)/rx,ey=(y+.5-cy)/ry;if(ex*ex+ey*ey<=1&&(!ok||ok(g[y][x])))g[y][x]=col;}};
+  const R=(x,y,w,h,col)=>{for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)if(j>=0&&j<HS&&i>=0&&i<HS)g[j][i]=col;};
+  R(41,30,11,5,HB.B);R(52,31,9,3,HB.B);R(41,30,11,1,HB.L);R(52,31,9,1,HB.L);R(41,34,11,1,HB.D);R(52,33,9,1,HB.D);   // tail boom
+  R(54,23,4,19,HB.B);R(54,23,4,1,HB.L);R(54,23,1,19,HB.L);R(57,24,1,18,HB.D);R(54,41,4,1,HB.D);                    // stabilator
+  R(60,26,1,13,HB.R);R(59,30,2,5,HB.D);                                                                          // tail rotor
+  R(19,19,8,3,HB.d);R(19,43,8,3,HB.d);R(22,22,3,2,HB.D);R(22,41,3,2,HB.D);                                         // wheels on stub struts
+  E(26,32.5,18.2,9.8,HB.B);E(11.5,32.5,5.5,6.4,HB.B);                                                             // fuselage + nose
+  E(24,29.5,16,6,HB.L,v=>v===HB.B);E(26,32.8,17,7,HB.B,v=>v===HB.L);                                               // light upper edge
+  for(let y=38;y<HS;y++)for(let x=0;x<46;x++)if(g[y][x]===HB.B||g[y][x]===HB.L)g[y][x]=HB.D;                       // shaded lower edge
+  E(14.5,32.5,7,7.4,HB.G,v=>v===HB.B||v===HB.L||v===HB.D);                                                        // cockpit glass
+  R(9,29,4,1,HB.H);R(9,30,1,3,HB.H);R(11,31,2,1,HB.H);                                                            // glint
+  for(let x=8;x<22;x++)for(const y of[32,33])if(g[y][x]===HB.G&&x>15)g[y][x]=HB.K;                                // windscreen centre post
+  for(let y=22;y<44;y++){[22,33].forEach(x=>{if(g[y][x]&&g[y][x]!==HB.G&&g[y][x]!==HB.K)g[y][x]=HB.D;});}           // cabin door seams
+  R(33,26,8,2,HB.d);R(33,37,8,2,HB.d);R(40,27,2,1,HB.R);R(40,37,2,1,HB.R);                                         // engine exhausts
+  E(HUB.x,HUB.y+.5,4.4,4.4,HB.D);E(HUB.x,HUB.y+.5,2.3,2.3,HB.R);                                                  // rotor mast
+  outline(g,HB.K);blit(c,g);},1);}
+function rotorArt(fr,spin){return art('rot'+fr+(spin?'s':''),HS,HS,c=>{const hx=HUB.x,hy=HUB.y+.5,RR=28.5,a0=fr*Math.PI/12,px=new Set();
+  if(spin){c.fillStyle='rgba(60,66,76,.15)';for(let y=0;y<HS;y++)for(let x=0;x<HS;x++){if(Math.hypot(x+.5-hx,y+.5-hy)<=RR+.5)c.fillRect(x,y,1,1);}
+    for(let a=0;a<360;a+=1.5){const x=Math.floor(hx+Math.cos(a/57.3)*RR),y=Math.floor(hy+Math.sin(a/57.3)*RR);if(x>=0&&x<HS&&y>=0&&y<HS)px.add(y*HS+x);}
+    c.fillStyle='rgba(60,66,76,.2)';px.forEach(k=>c.fillRect(k%HS,Math.floor(k/HS),1,1));px.clear();}
+  const n=spin?2:4;
+  for(let k=0;k<n;k++){const a=a0+k*(spin?Math.PI:Math.PI/2);for(let t=3;t<=RR;t+=.5){const x=hx+Math.cos(a)*t,y=hy+Math.sin(a)*t,x2=x-Math.sin(a)*.9,y2=y+Math.cos(a)*.9;
+    [[x,y],[x2,y2]].forEach(([u,v])=>{u=Math.floor(u);v=Math.floor(v);if(u>=0&&u<HS&&v>=0&&v<HS)px.add(v*HS+u);});}}
+  c.fillStyle=spin?'rgba(44,48,56,.6)':HB.R;px.forEach(k=>c.fillRect(k%HS,Math.floor(k/HS),1,1));},1);}
+function heliShadow(){return art('heliS',HS,HS,c=>{c.fillStyle='#000';
+  for(let y=0;y<HS;y++)for(let x=0;x<HS;x++){const ex=(x+.5-25)/19.4,ey=(y+.5-32.5)/10.8;if(ex*ex+ey*ey<=1)c.fillRect(x,y,1,1);}
+  c.fillRect(41,29,20,7);c.fillRect(53,22,6,21);},1);}
+function canopyArt(big){const w=big?26:14,h=big?13:8;return art('canopy'+(big?1:0),w,h,c=>{const g=grid(w,h),cx=w/2,rx=w/2-1,ry=h-3,bw=big?4:3;
+  for(let x=1;x<w-1;x++){const u=(x+.5-cx)/rx,top=Math.max(1,Math.round((h-2)-ry*Math.sqrt(Math.max(0,1-u*u)))),bot=h-2-((x%bw)===(bw>>1)?1:0);
+    for(let y=top;y<=bot;y++)g[y][x]=(y<=top+1&&u<.25)?'#a4b870':((Math.floor(x/bw)&1)?'#64783c':'#80944c');}
+  outline(g,'#2c3420');blit(c,g);},1);}
+function cloudArt(v){const w=v?30:40,h=v?12:15;return art('cloud'+v,w,h,c=>{const g=grid(w,h);
+  const puffs=v?[[8,7,7,4.5],[16,5,8,5],[23,7.5,6,4]]:[[9,9,8,5],[19,6,9,6],[29,8.5,9,5.5],[15,10,10,4.5]];
+  puffs.forEach(([cx,cy,rx,ry])=>{for(let y=0;y<h;y++)for(let x=0;x<w;x++){const ex=(x+.5-cx)/rx,ey=(y+.5-cy)/ry;if(ex*ex+ey*ey<=1)g[y][x]=(y+.5>cy+ry*.35)?'#dcecfc':'#ffffff';}});
+  blit(c,g);});}
+/* ═════════ CHARACTERS — compact 16×16 sprites (≈12×16 figure): big head, tiny body, dark outline ═════════
+   K outline · H/h/I hair · C/c/W/B cap · S/s skin · E eye · T/t top · A sleeve · P pants · F shoes
+   D skirt                                                                                              */
+const HEAD={
+ short:{
+  down:['......KKKK......','....KKHHHHKK....','...KHIIHHHHHK...','..KHIHHHHHHHhK..','..KHHHHHHHHHhK..','..KHhSSHHSShhK..','..KhSSESSESShK..','..KSSSESSESSSK..','...KsSSSSSSsK...','....KKssssKK....'],
+  up:  ['......KKKK......','....KKHHHHKK....','...KHIIHHHHHK...','..KHIHHHHHHHhK..','..KHHHHHHHHHhK..','..KHHHHHHHHHhK..','..KHHHHHHHHhhK..','..KShHHHHHHhSK..','...KKhhhhhhKK...','.....KssssK.....'],
+  left:['......KKKK......','....KKHHHHKK....','...KIIHHHHHHK...','..KHIHHHHHHHhK..','..KHHHHHHHHHhK..','..KSSHHHHHHHhK..','..KSESSHHHHhhK..','..KSESSSHHhhK...','...KSSSSsshK....','....KKssKK......'],
+ },
+ cap:{
+  down:['......KKKK......','....KKCCCCKK....','...KCWWWWWWCK...','..KCCWWWWWWCCK..','..KCCCCCCCCCCK..','..KBBBBBBBBBBK..','..KHSSESSESSHK..','..KSSSESSESSSK..','...KsSSSSSSsK...','....KKssssKK....'],
+  up:  ['......KKKK......','....KKCCCCKK....','...KCCCCCCCCK...','..KCCCCCCCCCcK..','..KCCCCCCCCccK..','..KcCCCCCCcccK..','..KHKccccccKHK..','..KHHHHHHHHHHK..','...KKhHHHHhKK...','.....KssssK.....'],
+  left:['......KKKK......','....KKCCCCKK....','...KWWCCCCCCK...','..KWWWCCCCCCcK..','..KWWCCCCCCCcK..','.KBBBBBCCCCccK..','.KKSESSHHHHHHK..','..KSESSSHHHhK...','...KSSSSsshK....','....KKssKK......'],
+ },
+ long:{
+  down:['......KKKK......','....KKHHHHKK....','...KHIIHHHHHK...','..KHIHHHHHHHhK..','..KHHHHHHHHHhK..','..KHHhSSSShHhK..','..KHhSESSEShhK..','..KHhSESSEShhK..','..KHhsSSSSshhK..','..KHhKssssKhhK..'],
+  up:  ['......KKKK......','....KKHHHHKK....','...KHIIHHHHHK...','..KHIHHHHHHHhK..','..KHHHHHHHHHhK..','..KHHHHHHHHHhK..','..KHHHHHHHHhhK..','..KHHHHHHHHhhK..','..KHHHHHHHHhhK..','..KHHhHHHHhhhK..'],
+  left:['......KKKK......','....KKHHHHKK....','...KIIHHHHHHK...','..KHIHHHHHHHhK..','..KHHHHHHHHHhK..','..KSSHHHHHHHhK..','..KSESSHHHHhhK..','..KSESSSHHHhhK..','...KSSSSsHHhhK..','....KKssKHHhhK..'],
+ }};
+/* long-hair tails that fall over the shoulders (rows 10-11) */
+const TAIL={down:['..KHhK....KhhK..','...KK......KK...'],
+            up:  ['..KHhHHHHHhhhK..','...KKKKKKKKKK...'],
+            left:['.........KHhhK..','..........KKK...']};
+/* torso rows 10-12: [stand, step] */
+const TORSO={
+ down:[['....KTTSSTTK....','...KATTTTTTAK...','...KSKtTTtKSK...'],
+       ['....KTTSSTTK....','...KSTTTTTTAK...','...KKKtTTtKSK...']],
+ up:  [['....KTTTTTTK....','...KATTTTTTAK...','...KSKtTTtKSK...'],
+       ['....KTTTTTTK....','...KSTTTTTTAK...','...KKKtTTtKSK...']],
+ left:[['.....KTTTTK.....','.....KTATTK.....','.....KtSTtK.....'],
+       ['.....KTTTTK.....','....KATTTTAK....','....KSKTTtKK....']]};
+/* legs rows 13-15: [stand, step] */
+const LEGS={
+ pants:{
+  down:[['....KPPKKPPK....','....KFFKKFFK....','....KKK..KKK....'],
+        ['....KPPKKPPK....','....KFFKKKKK....','....KKK.........']],
+  left:[['.....KPPPPK.....','....KFFFFFK.....','....KKKKKKK.....'],
+        ['....KPPKKPPK....','...KFFK..KFFK...','...KKKK..KKKK...']]},
+ skirt:{
+  down:[['...KDDDDDDDDK...','....KFFKKFFK....','....KKK..KKK....'],
+        ['...KDDDDDDDDK...','....KFFKKKKK....','....KKK.........']],
+  left:[['....KDDDDDDK....','....KFFFFFK.....','....KKKKKKK.....'],
+        ['...KDDDDDDDK....','...KFFK..KFFK...','...KKKK..KKKK...']]}};
+LEGS.pants.up=LEGS.pants.down;LEGS.skirt.up=LEGS.skirt.down;
+const SKIN={S:'#f8d0a8',s:'#e0a078'},SKIN2={S:'#d8a070',s:'#b07848'},OUT_K='#282028',CH_H=16,CH_UP=2;
+const CHARS={
+ player:{head:'short',legs:'pants',pal:{H:'#2a2230',h:'#17121c',I:'#4a3c56',T:'#14b8a6',t:'#0f8a7d',A:'#14b8a6',P:'#2b3350',F:'#f4f4f8',...SKIN2}},
+ mentor:{head:'short',legs:'pants',pal:{H:'#3a3a48',h:'#24242e',I:'#6a6a7c',T:'#3b5bdb',t:'#2f49b0',A:'#3b5bdb',P:'#2a2a36',F:'#1c1c24',...SKIN}},
+ sgt:{head:'cap',legs:'pants',pal:{C:'#6c8848',c:'#4c6830',W:'#8cac64',B:'#4c6830',H:'#382818',h:'#281808',T:'#789850',t:'#587838',A:'#789850',P:'#586838',F:'#403020',...SKIN2}},
+ prof:{head:'short',legs:'pants',pal:{H:'#784828',h:'#583018',I:'#a06838',T:'#4878d8',t:'#3058a8',A:'#4878d8',P:'#484858',F:'#383030',...SKIN}},
+ kid:{head:'cap',legs:'pants',pal:{C:'#f8c838',c:'#c89818',W:'#f8e478',B:'#c89818',H:'#784828',h:'#583018',T:'#f8f8f8',t:'#c8c8d8',A:'#f8d0a8',P:'#3868c8',F:'#383030',...SKIN}},
+ vol:{head:'short',legs:'pants',pal:{H:'#302420',h:'#181010',I:'#504038',T:'#38a860',t:'#287840',A:'#38a860',P:'#484858',F:'#383030',...SKIN2}},
+ lass:{head:'long',legs:'skirt',pal:{H:'#c07038',h:'#985028',I:'#e49858',T:'#f068a8',t:'#c04880',A:'#f068a8',D:'#f068a8',F:'#b04070',...SKIN}},
+ lass2:{head:'long',legs:'skirt',pal:{H:'#40304c',h:'#281c34',I:'#604c70',T:'#8858c8',t:'#6038a0',A:'#8858c8',D:'#8858c8',F:'#483060',...SKIN}},
+ mom:{head:'long',legs:'skirt',pal:{H:'#684020',h:'#482810',I:'#8c5c30',T:'#f8a048',t:'#c87828',A:'#f8a048',D:'#f8f0e0',F:'#784830',...SKIN}},
+ jump:{head:'cap',legs:'pants',pal:{C:'#a03444',c:'#74202e',W:'#bc4c5c',B:'#74202e',H:'#382818',h:'#281808',T:'#789850',t:'#587838',A:'#789850',P:'#586838',F:'#403020',...SKIN}},
+ guide:{head:'short',legs:'pants',pal:{H:'#8c7c48',h:'#685c30',I:'#b0a060',T:'#e05840',t:'#b03c30',A:'#e05840',P:'#585868',F:'#383030',...SKIN}},
+};
+const mirror=r=>r.split('').reverse().join('');
+/* pose: 0 stand · 1 step (left foot) · 2 step (right foot) */
+function charArt(kind,dir,pose){const flip=dir==='right',d=flip?'left':dir;
+  return art('ch'+kind+dir+pose,16,CH_H,c=>{const ch=CHARS[kind],st=pose?1:0;
+    let body=TORSO[d][st].concat(LEGS[ch.legs][d][st]);
+    if(pose===2&&d!=='left')body=body.map(mirror);
+    const pal=Object.assign({K:OUT_K,E:'#201820',I:ch.pal.H,c:ch.pal.C,t:ch.pal.T},ch.pal);
+    const cv2=mkc(16,CH_H),g=cv2.getContext('2d');
+    stamp(g,body,pal,0,10);
+    stamp(g,HEAD[ch.head][d],pal,0,0);
+    if(ch.head==='long')stamp(g,TAIL[d],pal,0,10);
+    if(flip){c.translate(16,0);c.scale(-1,1);}
+    c.drawImage(cv2,0,0);},1);}
+/* ═════════ PANEL CONTENT ═════════ */
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+/* Preview "images" (inline SVG) shown when a crystal is opened */
+const IMG={
+  0:()=>`<svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:1em;background:#0f1733">
+   <defs><linearGradient id="pg" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#2a6df4"/></linearGradient></defs>
+   <rect width="640" height="360" fill="#0f1733"/><rect x="0" y="0" width="640" height="56" fill="url(#pg)"/>
+   <text x="24" y="37" font-family="Nunito,sans-serif" font-weight="900" font-size="22" fill="#fff">PROJECTS · github.com/Fahadbin-Alam</text>
+   ${[['📱','Muslimo','TypeScript · React Native · FastAPI','Full-stack Islamic learning platform','#1fa36a'],
+      ['🎮','Path of the Sahabah','Luau · Roblox Studio · Rojo','Roblox educational game, ages 9–17','#e63946'],
+      ['💳','Donation Platform','Cloudflare Pages Functions · Stripe','One World Relief · $20K+ processed','#2a6df4'],
+      ['🛰️','Network Automation','Python · Cisco','82nd Airborne · deployment time cut 83%','#7c3aed']].map((p,i)=>{const x=24+(i%2)*300,y=76+Math.floor(i/2)*138;return `
+     <rect x="${x}" y="${y}" width="292" height="122" rx="14" fill="#1b2548"/><rect x="${x}" y="${y}" width="8" height="122" rx="4" fill="${p[4]}"/>
+     <text x="${x+24}" y="${y+46}" font-size="34">${p[0]}</text>
+     <text x="${x+74}" y="${y+36}" font-family="Nunito,sans-serif" font-weight="900" font-size="17" fill="#fff">${esc(p[1])}</text>
+     <text x="${x+74}" y="${y+58}" font-family="Nunito,sans-serif" font-weight="700" font-size="11.5" fill="#ffd166">${esc(p[2])}</text>
+     <text x="${x+24}" y="${y+96}" font-family="Nunito,sans-serif" font-weight="700" font-size="12" fill="#b7c2e6">${esc(p[3])}</text>`;}).join('')}</svg>`,
+  1:()=>{const mc=document.createElement('canvas').getContext('2d'),fitW=(t,w,sz)=>{mc.font=w+' '+sz+'px Nunito,sans-serif';return mc.measureText(t).width>510?' textLength="524" lengthAdjust="spacingAndGlyphs"':'';};
+   const line=(y,t,b)=>`<text x="56" y="${y}" font-family="Nunito,sans-serif" font-weight="${b?900:700}" font-size="${b?11.5:10}" fill="${b?'#1c2540':'#3a4260'}"${fitW(t,b?900:700,b?11.5:10)}>${esc(t)}</text>`;
+   const sec=(y,t)=>`<text x="56" y="${y}" font-family="Nunito,sans-serif" font-weight="900" font-size="11" fill="#2a6df4" letter-spacing="1.5">${esc(t)}</text><rect x="56" y="${y+5}" width="528" height="1.5" fill="#2a6df4"/>`;
+   return `<svg viewBox="0 0 640 436" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:1em;background:#0f1733">
+   <rect width="640" height="436" fill="#0f1733"/><rect x="32" y="14" width="576" height="460" rx="6" fill="#fff"/>
+   <text x="320" y="46" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="22" fill="#1c2540">Fahadbin Alam</text>
+   <text x="320" y="62" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="700" font-size="9.5" fill="#3a4260">856-870-7528 | fma52@drexel.edu | linkedin.com/in/fahadbin-alam- | github.com/Fahadbin-Alam</text>
+   <text x="320" y="76" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="700" font-style="italic" font-size="9.5" fill="#3a4260">U.S. Army Veteran (Honorable Discharge) | Secret Clearance</text>
+   ${sec(96,'EDUCATION')}${line(112,'Drexel University | B.S. Computer Science | Minors: Mathematics, Data Science, Electrical & Computer Engineering',0)}
+   ${sec(131,'TECHNICAL SKILLS')}${line(147,'Languages: Python, TypeScript, JavaScript, C#, SQL, Luau, HTML/CSS',0)}
+   ${line(160,'Frameworks & Libraries: FastAPI, React Native (Expo), ASP.NET Core, .NET, SQLAlchemy, Alembic',0)}
+   ${line(173,'Databases & Cloud: PostgreSQL, SQLite, Microsoft Azure, Cloudflare Pages/Functions, Docker, Linux',0)}
+   ${line(186,'Tools & Testing: Git/GitHub, GitHub Actions, pytest, Unit/Integration Testing, REST APIs, Stripe, RevenueCat, Rojo',0)}
+   ${sec(205,'TECHNICAL PROJECTS')}${line(221,'Muslimo — Full-Stack Islamic Learning Platform (April 2026 – Present)',1)}
+   ${line(234,'TypeScript, React Native (Expo), Python, FastAPI, SQLAlchemy, Alembic, PostgreSQL, Docker',0)}
+   ${line(250,'Path of the Sahabah — Roblox Educational Game (April 2026)',1)}
+   ${line(263,'Luau, Roblox Studio, Rojo, DataStoreService, GitHub Actions',0)}
+   ${sec(282,'PROFESSIONAL EXPERIENCE')}${line(298,'One World Relief | Founder & Developer (March 2026)',1)}
+   ${line(314,'Microsoft Software & Systems Academy (MSSA) | Cloud Application Development Program (June – December 2025)',1)}
+   ${line(330,'U.S. Army, 82nd Airborne Division (June 2020 – June 2025)',1)}
+   ${line(343,'Communications Systems Specialist (Network Administrator), Sergeant | Army Commendation Medal',0)}
+   ${line(359,'Airbnb Host | Operations Automation, North Carolina (2019 – 2023)',1)}
+   ${sec(378,'CERTIFICATIONS')}${line(394,'Cisco CCNA | CompTIA Security+ | CompTIA Network+ | CompTIA A+',0)}
+   <defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#0f1733"/></linearGradient></defs>
+   <rect x="32" y="406" width="576" height="30" fill="url(#fade)"/></svg>`;},
+  2:()=>`<svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:1em;background:#0f1733">
+   <rect width="640" height="360" fill="#0f1733"/>
+   <text x="24" y="38" font-family="Nunito,sans-serif" font-weight="900" font-size="22" fill="#fff">EXPERIENCE · 2019 → 2026</text>
+   <rect x="40" y="200" width="560" height="6" rx="3" fill="#2b365e"/>
+   ${[['2019 – 2023','AIRBNB HOST','Python operations automation','🏠','#f0a41e',60],
+      ['2020 – 2025','U.S. ARMY · 82nd AIRBORNE','Comms Systems Specialist · SGT','🪖','#6c8848',200],
+      ['2025','MSSA · MICROSOFT','Cloud Application Development','☁️','#ff7a59',340],
+      ['2026','ONE WORLD RELIEF','Founder & Developer','🌍','#1fa36a',480]].map((e,i)=>{const up=i%2===0,y=up?92:258;return `
+     <line x1="${e[5]+40}" y1="203" x2="${e[5]+40}" y2="${up?y+78:y-10}" stroke="${e[4]}" stroke-width="3"/>
+     <circle cx="${e[5]+40}" cy="203" r="11" fill="${e[4]}" stroke="#0f1733" stroke-width="4"/>
+     <rect x="${e[5]-20}" y="${y-32}" width="150" height="110" rx="12" fill="#1b2548"/>
+     <text x="${e[5]+55}" y="${y+12}" text-anchor="middle" font-size="30">${e[3]}</text>
+     <text x="${e[5]+55}" y="${y+36}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="10.5" fill="#fff">${esc(e[1])}</text>
+     <text x="${e[5]+55}" y="${y+52}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="700" font-size="8.6" fill="#b7c2e6">${esc(e[2])}</text>
+     <text x="${e[5]+55}" y="${y+70}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="10" fill="${e[4]}">${e[0]}</text>`;}).join('')}</svg>`
+};
+const SC=['#3ddc84','#ff6b6b','#5c93ff','#ffd166','#c084fc','#2dd4bf'];
+function bars(s){const ks=Object.keys(s);setTimeout(()=>ks.forEach(k=>{const e=$('bf-'+k.replace(/\W/g,''));if(e)e.style.width=s[k]+'%';}),60);
+  return `<div class="card bars" aria-label="Self-rated strengths">${ks.map((k,i)=>`<div class="br"><b>${k}</b><div class="bg"><div class="bf" id="bf-${k.replace(/\W/g,'')}" style="background:${SC[i%6]}"></div></div><i>${s[k]}</i></div>`).join('')}</div>`;}
+const nb=l=>l.replace(/ · (\S+)$/,' · <span class="nb">$1</span>');        // keep an address or number on one line
+const lk=a=>a.map(([l,u,c])=>/^(mailto|tel):/.test(u)?`<a class="btn ${c}" href="${u}"><span>${nb(l)}</span></a>`:`<a class="btn ${c}" href="${u}" target="_blank" rel="noopener"><span>${nb(l)} ↗</span><span class="sr"> (opens in a new tab)</span></a>`).join('');
+const back=(l='◀ BACK')=>`<button class="btn gray" type="button" onclick="closePanels()">${l}</button>`;
+const cards=a=>a.map(t=>`<div class="card flavor">${esc(t)}</div>`).join('');
+const moves=a=>`<div class="moves">${a.map(([m,d])=>`<div class="mv">${esc(m)}<small>${esc(d)}</small></div>`).join('')}</div>`;
+function showEntry(h,cls,html){$('entry-h').className='ph '+cls;$('entry-h').innerHTML=h;$('entry-b').innerHTML=html;openPanel('entry');$('entry-b').scrollTop=0;}
+
+/* The whole résumé as readable text (the picture above it is only a thumbnail on a phone) */
+function resumeText(){const ent=(t,when,sub,bl)=>`<div class="rt"><b>${esc(t)}</b><i>${esc(when)}</i></div>${sub?`<div class="st">${esc(sub)}</div>`:''}<ul>${bl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  return `<div class="card rs">
+   <div class="rc"><b>Fahadbin Alam</b><br>856-870-7528 · fma52@drexel.edu<br>linkedin.com/in/fahadbin-alam- · github.com/Fahadbin-Alam<br><i>U.S. Army Veteran (Honorable Discharge) | Secret Clearance</i></div>
+   <h4>EDUCATION</h4><div class="rt"><b>Drexel University</b><i>Philadelphia, PA</i></div><div>B.S. Computer Science | Minors: Mathematics, Data Science, Electrical &amp; Computer Engineering</div>
+   <h4>TECHNICAL SKILLS</h4>${SKILLS.map(([k,v])=>`<div><b>${esc(k)}:</b> ${esc(v.replace(/ · /g,', '))}</div>`).join('')}
+   <h4>TECHNICAL PROJECTS</h4>
+   ${ent('Muslimo — Full-Stack Islamic Learning Platform','April 2026 – Present',KIOSKS[0].stack,R.muslimo)}
+   ${ent('Path of the Sahabah — Roblox Educational Game','April 2026',KIOSKS[1].stack,R.sahabah)}
+   <h4>PROFESSIONAL EXPERIENCE</h4>
+   ${ent('One World Relief | Founder & Developer','March 2026','',R.owr)}
+   ${ent('Microsoft Software & Systems Academy (MSSA) | Cloud Application Development Program','June – December 2025','',R.mssa)}
+   ${ent('U.S. Army, 82nd Airborne Division','June 2020 – June 2025','Communications Systems Specialist (Network Administrator), Sergeant | Army Commendation Medal',R.army)}
+   ${ent('Airbnb Host | Operations Automation, North Carolina','2019 – 2023','',R.airbnb)}
+   <h4>CERTIFICATIONS</h4><div>Cisco CCNA | CompTIA Security+ | CompTIA Network+ | CompTIA A+</div></div>`;}
+/* The three crystals collected in the Workshop (also reachable from the menu) */
+const got=new Set();let allDone=false;
+const CCLS=['purple','blue','green'];
+function mark(i){got.add(i);$('prog').innerHTML=`<b>◆</b> <span><i>${got.size}</i>/3</span>`;$('prog').setAttribute('aria-label',`Crystals collected: ${got.size} of 3`);}
+const crystalBody=i=>{const p=CRYSTALS[i];return `<div class="img">${IMG[i]()}</div><div class="card flavor">${esc(p.f)}</div>`+
+  (i===1?`<div class="btnrow">${lk(p.links)}</div>${resumeText()}`:`${bars(p.s)}<div class="btnrow">${lk(p.links)}</div>`);};
+function openCrystal(i){const p=CRYSTALS[i];mark(i);showEntry(`<span>${p.n}</span><small>COLLECTED ${got.size} / 3</small>`,CCLS[i],crystalBody(i)+back('◀ CLOSE'));}
+function crystalPick(){showEntry(`<span>WHERE TO START?</span><small>THE WORKSHOP</small>`,'',
+  `<div class="card lite flavor">MENTOR: Each crystal holds a part of FAHADBIN's professional life. Pick one!</div>
+   <div class="list">${CRYSTALS.map((p,i)=>`<button class="li" type="button" onclick="crystalInfo(${i})"><span class="ico" style="background:${p.c}"><span>${p.e}</span></span><span><span class="n">${p.n}</span><br><span class="s">${p.t}</span></span><span class="pill${got.has(i)?' done':''}">${got.has(i)?'✓ COLLECTED':'OPEN ›'}</span></button>`).join('')}</div>${back('◀ NOT NOW')}`);}
+function crystalInfo(i){const p=CRYSTALS[i];mark(i);showEntry(`<span>${p.n}</span><small>COLLECTED ${got.size} / 3</small>`,CCLS[i],
+  crystalBody(i)+`<button class="btn gray" type="button" onclick="crystalPick()">◀ BACK</button>`);}
+
+/* Plain-text résumé: the "skip the game" view for busy readers (title button, HUD button, R key, menu, or #resume in the link) */
+function openResume(){showEntry(`<span>FAHADBIN ALAM</span><small>RÉSUMÉ</small>`,'navy',
+  `<div class="card row"><div class="ico" style="background:#4878d8"><span>📄</span></div><div><div class="t1">Fahadbin Alam</div><div class="t2">B.S. Computer Science student at Drexel University<br>U.S. Army Veteran (Honorable Discharge) · Secret Clearance</div></div></div>
+   <div class="btnrow">${lk([RESUME_LINK,['LINKEDIN',F.linkedin,''],['GITHUB',F.github,'dark'],['EMAIL · '+F.email,'mailto:'+F.email,'purple']])}</div>
+   ${resumeText()}
+   <div class="card rs"><h4 style="margin-top:0">ALSO</h4><div>Author of the book <b>The Ivory</b> (<a href="${F.book}" target="_blank" rel="noopener">Amazon ↗</a>) · Founder of <a href="${F.nonprofit}" target="_blank" rel="noopener">One World Relief ↗</a>, a nonprofit that supports orphans and builds water wells.</div></div>
+   ${started?back('◀ BACK TO THE GAME'):`<button class="btn green" type="button" onclick="closePanels();start()">▶ PLAY THE GAME INSTEAD</button>`+back('◀ CLOSE')}`);}
+
+const INTERIOR={
+  home(){showEntry(`<span>CONTACT CARD</span><small>📌 ON THE FRIDGE</small>`,'',
+   `<div class="card row"><div class="ico" style="background:#e63946"><span>👤</span></div><div><div class="t1">FAHADBIN ALAM</div><div class="t2">Computer Science student at Drexel University<br>U.S. Army Veteran (Honorable Discharge) · Philadelphia, PA</div></div></div>
+    <div class="card lite flavor">"Become the top 1% of the 1% by helping those get up there with you 😊"</div>
+    <div class="btnrow">${lk([['EMAIL · fma52@drexel.edu','mailto:'+F.email,''],['CALL · 856-870-7528',F.phone,'green'],['LINKEDIN',F.linkedin,'purple'],['LINKTREE · ALL MY LINKS',F.linktree,'dark']])}</div><button class="btn gray" type="button" onclick="openResume()">READ THE TEXT RÉSUMÉ</button>${back('◀ CLOSE')}`);},
+  army(){showEntry(`<span>82nd AIRBORNE DIVISION</span><small>JUNE 2020 – JUNE 2025</small>`,'green',
+   `<div class="card row"><div class="ico" style="background:#6c8848"><span>🪖</span></div><div><div class="t1">SGT ALAM · U.S. ARMY</div><div class="t2"><span class="type" style="background:#6c8848">ARMY</span>Communications Systems Specialist (Network Administrator) · Sergeant</div></div></div>
+    ${cards(R.army)}
+    ${moves([['PYTHON AUTOMATION','10+ devices · 25+ files'],['83% FASTER','3 hrs to 30 min'],['CHANGE DETECTION','50+ network incidents'],['TEAM LEAD','5-person team']])}
+    <div class="card row lite"><span style="font-size:2.4em">🎖️</span><div><div class="t1" style="font-size:1.05em">ARMY COMMENDATION MEDAL</div><div class="t2">U.S. Army Veteran (Honorable Discharge)<br>Secret Clearance</div></div></div>
+    <div class="card row lite"><span style="font-size:2.4em">🪂</span><div><div class="t1" style="font-size:1.05em">AIRBORNE</div><div class="t2">He jumped from aircraft with the 82nd. The AIRFIELD is just east of the barracks — or jump right now:</div></div></div>
+    <button class="btn gold" type="button" onclick="closePanels();startJump()">🪂 PARACHUTE INTO TOWN</button>
+    ${lk([['VIEW ON LINKEDIN',F.linkedin,'']])}${back('◀ LEAVE BARRACKS')}`);},
+  drex(){showEntry(`<span>DREXEL UNIVERSITY</span><small>PHILADELPHIA, PA</small>`,'blue',
+   `<div class="card row"><div class="ico" style="background:#2a6df4"><span>🎓</span></div><div><div class="t1">B.S. COMPUTER SCIENCE</div><div class="t2">Minors: Mathematics · Data Science · Electrical &amp; Computer Engineering</div></div></div>
+    <div class="card flavor" style="opacity:.8">CERTIFICATIONS</div>
+    <div class="badges"><div class="badge"><span class="ic">🛰️</span>CISCO<br>CCNA</div><div class="badge"><span class="ic">🛡️</span>COMPTIA<br>SECURITY+</div><div class="badge"><span class="ic">🌐</span>COMPTIA<br>NETWORK+</div><div class="badge"><span class="ic">💾</span>COMPTIA<br>A+</div></div>
+    <div class="card flavor" style="opacity:.8">TECHNICAL SKILLS</div>
+    <div class="moves one">${SKILLS.map(([m,d])=>`<div class="mv">${esc(m.toUpperCase())}<small>${esc(d)}</small></div>`).join('')}</div>${back('◀ LEAVE CAMPUS')}`);},
+  mssa(){showEntry(`<span>MSSA CENTER</span><small>JUNE – DECEMBER 2025</small>`,'',
+   `<div class="card row"><div class="ico" style="background:#ff7a59"><span>☁️</span></div><div><div class="t1">MICROSOFT SOFTWARE &amp; SYSTEMS ACADEMY</div><div class="t2">Cloud Application Development Program</div></div></div>
+    ${cards(R.mssa)}
+    ${bars({'C#':90,'.NET':88,'ASP.NET':86,'AZURE':84,'TESTING':85})}${back('◀ LEAVE CENTER')}`);},
+  owr(){showEntry(`<span>ONE WORLD RELIEF</span><small>MARCH 2026</small>`,'green',
+   `<div class="card row"><div class="ico" style="background:#1fa36a"><span>🌍</span></div><div><div class="t1">ONE WORLD RELIEF</div><div class="t2"><span class="type" style="background:#1fa36a">NONPROFIT</span>Founder &amp; Developer</div></div></div>
+    ${cards(R.owr)}
+    ${moves([['CLOUDFLARE','Pages Functions · serverless'],['STRIPE CHECKOUT','$20K+ · 50+ donations'],['HMAC-SHA256','Webhook verification'],['GOOGLE SHEETS','10 fields per record']])}
+    ${lk([['VISIT / DONATE · ONE-WORLD-RELIEF.ORG',F.nonprofit,'green']])}${back('◀ LEAVE')}`);},
+  mart(){showEntry(`<span>BOOK MART</span><small>SHOP</small>`,'purple',
+   `<div class="card row"><div class="ico" style="background:#7c3aed"><span>📕</span></div><div><div class="t1">THE IVORY</div><div class="t2">by Fahadbin Mihad Alam · Available on Amazon</div></div></div>
+    <div class="card row lite"><span style="font-size:2.2em">🏠</span><div><div class="t1" style="font-size:1.05em">AIRBNB HOST · 2019 – 2023</div><div class="t2">Operations Automation, North Carolina</div></div></div>
+    <div class="card flavor">CLERK: The author also hosted on Airbnb. ${esc(R.airbnb[0])}</div>
+    ${lk([['BUY THE IVORY ON AMAZON',F.book,'purple'],['JOIN THE MUSLIM DISCORD',F.discord,''],['ALL LINKS · LINKTREE',F.linktree,'dark']])}${back('◀ LEAVE SHOP')}`);},
+};
+
+function openProject(i){const w=KIOSKS[i];seen.add(w.n);
+  showEntry(`<span>${w.n}</span><small>${w.t}</small>`,'purple',
+   `<div class="card row"><div class="ico" style="background:${w.c}"><span>${w.e}</span></div><div><div class="t1">${w.n}</div><div class="t2"><span class="type" style="background:${w.c}">${w.t}</span>${esc(w.sub)}<br>${w.when} · ${seen.size}/${KIOSKS.length} kiosks viewed</div></div></div>
+    <div class="card lite flavor" style="font-size:.95em;opacity:.85">${esc(w.stack)}</div>
+    ${cards(w.f)}${moves(w.moves)}
+    ${lk(w.links)}${back('◀ BACK TO THE PARK')}`);}
+
+function contactCard(){showEntry(`<span>CONTACT CARD</span><small>BULLETIN BOARD</small>`,'gold',
+  `<div class="card row"><div class="ico" style="background:#f0a41e"><span>🧑‍💻</span></div><div><div class="t1">FAHADBIN ALAM</div><div class="t2">CS Student · U.S. Army Veteran (Honorable Discharge)<br>Kiosks viewed: ${seen.size}/${KIOSKS.length} · Certs: 4 · Secret Clearance</div></div></div>
+   <div class="badges"><div class="badge"><span class="ic">🛰️</span>CCNA</div><div class="badge"><span class="ic">🛡️</span>SEC+</div><div class="badge"><span class="ic">🌐</span>NET+</div><div class="badge"><span class="ic">💾</span>A+</div></div>
+   <div class="btnrow">${lk([['LINKEDIN',F.linkedin,''],['GITHUB',F.github,'dark'],['ONE WORLD RELIEF',F.nonprofit,'green'],['LINKTREE',F.linktree,'gold'],['EMAIL · '+F.email,'mailto:'+F.email,'purple'],['CALL · 856-870-7528',F.phone,'green']])}</div>
+   <button class="btn gray" type="button" onclick="openResume()">READ THE TEXT RÉSUMÉ</button>${back('◀ CLOSE')}`);}
+/* ═════════ AIRFIELD — helicopter flight and parachute jump ═════════
+   Board the helicopter → it lifts off and flies west over town → press the action button to jump (or it
+   drops you over the town square) → steer the parachute → land on any walkable tile.                         */
+const PADC={x:(PAD.x+PAD.n/2)*TS,y:(PAD.y+PAD.n/2)*TS};         // ground centre of the pad, in art px
+const HH=HS>>1;
+const FLY_ALT=52,FLY_V=80,CHUTE_V=46,SINK=6.5,JUMP_FROM=31*TS,AUTO_X=16.5*TS;
+const HELI={st:'parked',x:PADC.x,y:PADC.y,alt:0,t:0};           // parked · spin · rise · fly · gone · return · spindown
+const CLOUDS=[[20,30],[150,95],[262,12],[92,150],[334,122],[212,186]];
+let J=null,jumps=0,rotT=0,REACH=null;                           // J = the jump in progress (st==='jump')
+const ease=t=>t*t*(3-2*t);
+
+function hud(t){const e=$('jhud');if(t){if(e.textContent!==t){e.textContent=t;$('sr').textContent=t;}e.classList.add('on');}else e.classList.remove('on');}
+const A_BTN=document.querySelector('.ab [data-k="a"]');
+function aLabel(t){if(A_BTN&&A_BTN.textContent!==t)A_BTN.textContent=t;}      // the touch action button reads JUMP while the green light is on
+const heliBusy=()=>say('',[`The helicopter is still on its way back to the pad. Give it a moment.`]);
+function boardHeli(){if(HELI.st!=='parked'){heliBusy();return;}
+  say('JUMPMASTER',[`Stand in the door, ${player}!`,`We fly west over ALAM TOWN. ${IS_TOUCH?'Tap JUMP':'Press ENTER'} when the light turns green, then steer your parachute with the ${IS_TOUCH?'joystick':'arrow keys'}.`],startJump);}
+function startJump(){if(!started||J||st==='jump'||st==='fade')return;
+  if(interior){say('',[`Step outside first — the helicopter waits at the AIRFIELD.`]);return;}
+  if(HELI.st!=='parked'){heliBusy();return;}
+  fade(()=>{st='jump';J={ph:'spin',t:0,gx:0,gy:0,alt:0,lead:0,canopy:0,ok:false,from:null};
+    HELI.st='spin';HELI.x=PADC.x;HELI.y=PADC.y;HELI.alt=0;hud('ROTORS TURNING…');});}
+function jumpPress(){if(J&&J.ph==='fly'&&J.ok)doJump();}
+function doJump(){const j=J;j.ph='fall';j.t=0;j.gx=HELI.x;j.gy=HELI.y;j.alt=HELI.alt;aLabel('TALK');showLoc('AIRBORNE!');}
+
+function updateJump(dt){const j=J,s=dt/1000;j.t+=s;
+  if(j.ph==='spin'){if(j.t>=1){j.ph='rise';j.t=0;HELI.st='rise';hud('LIFTING OFF…');}}
+  else if(j.ph==='rise'){HELI.alt=FLY_ALT*ease(Math.min(1,j.t/1.4));if(j.t>=1.4){j.ph='fly';j.t=0;HELI.st='fly';}}
+  else if(j.ph==='fly'){HELI.x-=FLY_V*Math.min(1,.2+j.t/1.1)*s;j.lead=Math.min(30,j.lead+40*s);
+    if(HELI.x<JUMP_FROM&&!j.ok){j.ok=true;aLabel('JUMP');}
+    hud(j.ok?`GREEN LIGHT — ${IS_TOUCH?'TAP JUMP':'PRESS ENTER TO JUMP'}`:'CLEARING THE TREES…');
+    if(HELI.x<=AUTO_X)doJump();}
+  else{
+    if(HELI.st==='fly'){HELI.x-=FLY_V*s;if(HELI.x<-80)HELI.st='gone';}
+    j.lead=Math.max(0,j.lead-60*s);
+    if(j.ph==='fall'){j.alt-=16*s;if(j.t>=.45){j.ph='chute';j.t=0;}}
+    else if(j.ph==='chute'){j.canopy=Math.min(1,j.t/.3);const d=wantDir();
+      if(d){j.gx+=DIRS[d][0]*CHUTE_V*s;j.gy+=DIRS[d][1]*CHUTE_V*s;}
+      j.gx=Math.max(1.5*TS,Math.min((W-1.5)*TS,j.gx));j.gy=Math.max(2.5*TS,Math.min(33.5*TS,j.gy));
+      j.alt-=SINK*s;if(j.alt<=0){j.alt=0;touchDown();}}
+    else if(j.ph==='land'){const k=Math.min(1,j.t/.25);j.gx=j.sx+(j.tx-j.sx)*k;j.gy=j.sy+(j.ty-j.sy)*k;if(k>=1){finishJump();return;}}
+    if(j.ph==='fall'||j.ph==='chute')hud(`ALT ${Math.max(0,Math.round(j.alt/FLY_ALT*125)*10)} FT — STEER WITH THE ${IS_TOUCH?'JOYSTICK':'ARROW KEYS'}`);
+  }}
+function tickHeli(dt){rotT+=dt;
+  if(HELI.st==='return'){HELI.t+=dt/1000;const k=Math.min(1,HELI.t/2.4);HELI.alt=150*(1-ease(k));if(k>=1){HELI.st='spindown';HELI.t=0;HELI.alt=0;}}
+  else if(HELI.st==='spindown'){HELI.t+=dt/1000;if(HELI.t>1.2)HELI.st='parked';}}
+
+/* every tile a visitor can walk to from the start — a landing must end on one of these */
+function reachSet(){if(REACH)return REACH;const seen=new Set([START.x+','+START.y]),q=[[START.x,START.y]];
+  while(q.length){const[x,y]=q.shift();for(const d in DIRS){const[dx,dy]=DIRS[d],nx=x+dx,ny=y+dy;
+    if(solid(nx,ny)||at(nx,ny)===DOOR)continue;const k=nx+','+ny;if(!seen.has(k)){seen.add(k);q.push([nx,ny]);}}}
+  return REACH=seen;}
+function nearestFree(tx,ty){const R=reachSet();let best=null,bd=1e9;
+  for(let r=0;r<40&&!best;r++)for(let y=ty-r;y<=ty+r;y++)for(let x=tx-r;x<=tx+r;x++){
+    if(Math.max(Math.abs(x-tx),Math.abs(y-ty))!==r||y>=36||!R.has(x+','+y))continue;
+    const d=(x-tx)*(x-tx)+(y-ty)*(y-ty);if(d<bd){bd=d;best=[x,y];}}
+  return best||[START.x,START.y];}
+function touchDown(){const j=J,tx=Math.floor(j.gx/TS),ty=Math.floor(j.gy/TS),t=nearestFree(tx,ty);
+  j.from=(t[0]===tx&&t[1]===ty)?null:at(tx,ty);j.ph='land';j.t=0;j.sx=j.gx;j.sy=j.gy;j.tx=t[0]*TS+8;j.ty=t[1]*TS+8;j.tile=t;hud('');}
+function finishJump(){const j=J,[x,y]=j.tile;J=null;jumps++;hud('');aLabel('TALK');place(x,y,'down');st='walk';zone=zoneAt(x,y);showLoc(zone);
+  HELI.st='return';HELI.x=PADC.x;HELI.y=PADC.y;HELI.alt=150;HELI.t=0;
+  const how=j.from===WALL||j.from===DOOR?`You slid off a rooftop and touched down right beside it.`:j.from===TRE||j.from===BUSH?`You steered clear of the treetops at the last second.`:j.from===WAT?`You skimmed the pond and landed on the bank.`:`Feet and knees together — a clean landing.`;
+  const lines=[`AIRBORNE! ${how}`];
+  if(jumps===1)lines.push(`FAHADBIN jumped from aircraft with the 82nd AIRBORNE DIVISION. Step into the barracks for his full Army record.`);
+  if(!introShown){introShown=true;lines.push(`Welcome to ALAM TOWN, ${player}! ${howTo()}`,`Every building, kiosk and sign holds part of FAHADBIN ALAM's résumé. Short on time? The RÉSUMÉ button at the top right has it all on one page.`);}
+  say('',lines);}
+
+function jumpCam(){const j=J,air=j.ph==='fall'||j.ph==='chute'||j.ph==='land',X=air?j.gx:HELI.x,Y=air?j.gy:HELI.y,A=air?j.alt:HELI.alt;
+  return[Math.round(X)-Math.round(j.lead)-(VW>>1),Math.round(Y-A*.5)-(VH>>1)];}
+
+/* drawing */
+const heliOnPad=()=>HELI.st==='parked'||HELI.st==='spin'||HELI.st==='spindown';
+function drawHeli(g,x,y,spin){g.drawImage(heliBody(),x,y);g.drawImage(rotorArt(spin?Math.floor(rotT/34)%12:1,spin),x,y);}
+function drawParked(g,cx,cy){const hx=PADC.x-HH-cx,hy=PADC.y-HH-cy;g.globalAlpha=.2;g.drawImage(heliShadow(),hx+2,hy+3);g.globalAlpha=1;drawHeli(g,hx,hy,HELI.st!=='parked');}
+function drawAir(g,cx,cy,vw,vh){
+  if(HELI.st==='rise'||HELI.st==='fly'||HELI.st==='return'){const hx=Math.round(HELI.x)-HH-cx,hy=Math.round(HELI.y)-HH-cy,a=Math.round(HELI.alt);
+    g.globalAlpha=.2;g.drawImage(heliShadow(),hx+2,hy+3);g.globalAlpha=1;drawHeli(g,hx,hy-a,true);}
+  const j=J,air=j&&(j.ph==='fall'||j.ph==='chute'||j.ph==='land');
+  if(air){const gx=Math.round(j.gx)-cx,gy=Math.round(j.gy)-cy,a=Math.round(j.alt),sw=j.ph==='chute'?Math.round(Math.sin(anim/420)*1.6):0,sh=a>30?3:a>12?4:5;
+    if(j.ph==='chute'&&Math.floor(anim/260)%2){const t=nearestFree(Math.floor(j.gx/TS),Math.floor(j.gy/TS)),mx=t[0]*TS-cx,my=t[1]*TS-cy;      // blinking corner marks: the tile you will land on
+      [[0,0,1,1],[15,0,-1,1],[0,15,1,-1],[15,15,-1,-1]].forEach(([x,y,dx,dy])=>{g.fillStyle='#383848';g.fillRect(mx+Math.min(x,x+dx*4),my+y,5,1);g.fillRect(mx+x,my+Math.min(y,y+dy*4),1,5);
+        g.fillStyle='#ffffff';g.fillRect(mx+Math.min(x+dx,x+dx*3),my+y+dy,3,1);g.fillRect(mx+x+dx,my+Math.min(y+dy,y+dy*3),1,3);});}
+    g.fillStyle='rgba(0,0,0,.28)';g.fillRect(gx-sh-1,gy+4,sh*2+2,3);g.fillRect(gx-sh+1,gy+3,sh*2-2,5);   // shadow widens on the way down
+    const px=gx-8+sw,py=gy-8-a;
+    if(j.ph!=='fall'){const big=j.canopy>=.6,cw=big?26:14,ch=big?13:8,ox=px+8-(cw>>1),oy=py-(big?19:13);
+      g.fillStyle='#3c4048';[[ox+1,5],[ox+Math.round(cw*.34),6],[ox+Math.round(cw*.66)-1,9],[ox+cw-2,10]].forEach(([x0,sx])=>{const y0=oy+ch-1,x1=px+sx,y1=py+7,n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);
+        for(let k=0;k<=n;k++)g.fillRect(Math.round(x0+(x1-x0)*k/n),Math.round(y0+(y1-y0)*k/n),1,1);});
+      g.drawImage(canopyArt(big),ox,oy);}
+    drawChar(g,'player','down',j.ph==='fall'?1:0,px,py);}
+  const alt=air?j.alt:(HELI.st==='rise'||HELI.st==='fly')?HELI.alt:0,al=Math.min(.9,alt/FLY_ALT*1.5);
+  if(al>.03){g.globalAlpha=al;const W2=vw+90,H2=vh+70;CLOUDS.forEach((c,i)=>{
+      const x=(((c[0]-cx*1.4-anim*.012*(1+i%3))%W2)+W2)%W2-60,y=(((c[1]-cy*1.4)%H2)+H2)%H2-40;g.drawImage(cloudArt(i&1),Math.round(x),Math.round(y));});g.globalAlpha=1;}
+}
+/* ═════════ STATE ═════════ */
+const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},OPP={up:'down',down:'up',left:'right',right:'left'};
+const WALK_MS=1000/60*16,RUN_MS=1000/60*8;      // 1 px, 2 px per 60 Hz frame
+let st='title',player='FRIEND',zone='SOUTH ROAD',egg=false,started=false,introShown=false;
+const me={x:START.x,y:START.y,fx:START.x,fy:START.y,dir:'up',t:0,moving:false,runN:0,step:0};
+let night=false;                      // bright daytime look by default; night is a switch
+let smooth=false;                     // crisp pixels by default; the smoothed look is a switch in the menu
+let dq=[],di=0,dcb=null,typ='',tp=0,tt=null,lastT=0,anim=0;
+const seen=new Set();
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const howTo=()=>IS_TOUCH?`Drag the joystick to walk. TALK reads signs and opens things, MENU has shortcuts.`:`Walk with the ARROW KEYS or WASD. ENTER talks and opens things, ESC opens the menu.`;
+
+function say(name,lines,cb){st='dlg';dq=lines;di=0;dcb=cb||null;$('dlg').style.display='block';$('dlg-name').textContent=name;$('dlg-name').style.display=name?'block':'none';type(lines[0]);}
+function type(s){clearTimeout(tt);typ=s;tp=REDUCED?s.length:0;$('sr').textContent=($('dlg-name').style.display!=='none'?$('dlg-name').textContent+': ':'')+s;
+  $('dlg-text').textContent=typ.slice(0,tp);$('dlg-arrow').style.display='none';
+  (function step(){tp=Math.min(typ.length,tp+2);$('dlg-text').textContent=typ.slice(0,tp);if(tp<typ.length)tt=setTimeout(step,22);else $('dlg-arrow').style.display='block';})();}
+function next(){if(tp<typ.length){clearTimeout(tt);tp=typ.length;$('dlg-text').textContent=typ;$('dlg-arrow').style.display='block';return;}if(++di<dq.length){type(dq[di]);return;}$('dlg').style.display='none';st='walk';if(dcb){const f=dcb;dcb=null;f();}}
+$('dlg').onclick=next;
+let lastFocus=null;
+function openPanel(id){if(st!=='panel')lastFocus=document.activeElement;st='panel';$(id).style.display='flex';document.body.classList.add('paneled');held.length=0;
+  if(id==='entry'&&!IS_TOUCH)setTimeout(()=>{const f=$('entry-b').querySelector('a,button');if(f)f.focus({preventScroll:true});},30);}
+function closePanels(){['entry','menu'].forEach(i=>$(i).style.display='none');document.body.classList.remove('paneled','menuopen');
+  st=!started?'title':J?'jump':'walk';                                   // a panel opened mid-flight only pauses the jump
+  if(lastFocus&&lastFocus.focus&&document.contains(lastFocus)&&lastFocus!==document.body&&lastFocus.offsetParent!==null)lastFocus.focus({preventScroll:true});else if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();lastFocus=null;
+  if(started&&got.size===3&&!allDone){allDone=true;setTimeout(celebrate,350);}}
+/* said once, the next time the visitor is standing still after collecting the third crystal */
+function celebrate(){if(st!=='walk'||me.moving){setTimeout(celebrate,250);return;}
+  say('THE MENTOR',[`All three crystals collected. Nicely done, ${player}!`,`That's the whole story: PROJECTS, RÉSUMÉ and EXPERIENCE. The RÉSUMÉ button at the top keeps everything on one page, with his LinkedIn, GitHub and email.`,`Feel free to keep exploring. Project Park, the barracks, Drexel and the AIRFIELD still have more to show.`]);}
+function fade(cb){st='fade';const f=$('flash');f.style.opacity=1;setTimeout(()=>{cb();if(st==='fade')st='walk';setTimeout(()=>f.style.opacity=0,90);},REDUCED?60:210);}
+let locT=null;function showLoc(t){const e=$('loc');e.textContent=t;e.classList.add('show');clearTimeout(locT);locT=setTimeout(()=>e.classList.remove('show'),2300);}
+
+function place(x,y,dir){me.x=me.fx=x;me.y=me.fy=y;me.dir=dir;me.t=0;me.moving=false;me.runN=0;}
+function enterInterior(id){$('dn').style.display='none';const b=BLD.find(b=>b.id===id),d=INT[id];setTimeout(()=>showLoc(b.label),250);interior={id,b};W=d.W;H=d.H;map=d.build();bidx=new Array(W*H).fill(-1);NPC=d.npc;SIGNS=d.signs;place(d.start.x,d.start.y,'up');}
+function exitInterior(){$('dn').style.display='';const b=interior.b;setTimeout(()=>showLoc('ALAM TOWN'),250);interior=null;W=OUT.W;H=OUT.H;map=OUT.map;bidx=OUT.bidx;NPC=OUT.NPC;SIGNS=OUT.SIGNS;place(b.dx,b.dy+1,'down');}
+
+/* ═════════ LOGIC ═════════ */
+function solid(x,y){if(x<0||y<0||x>=W||y>=H)return true;if(SOLID.has(at(x,y)))return true;return NPC.some(n=>n.x===x&&n.y===y);}
+function startStep(d){me.dir=d;const[dx,dy]=DIRS[d],nx=me.x+dx,ny=me.y+dy;
+  if(solid(nx,ny))return false;
+  me.fx=me.x;me.fy=me.y;me.x=nx;me.y=ny;me.t=0;me.moving=true;me.step^=1;return true;}
+const stepMs=()=>me.runN>=2?RUN_MS:WALK_MS;
+function arrived(){const t=at(me.x,me.y);
+  if(t===EXIT){fade(exitInterior);return true;}
+  if(t===DOOR){const b=BLD[bidx[me.y*W+me.x]];
+    if(INT[b.id])fade(()=>enterInterior(b.id));
+    else fade(()=>{place(me.x,me.y+1,'down');INTERIOR[b.id]();});
+    return true;}
+  if(!interior){const z=zoneAt(me.x,me.y);if(z!==zone){zone=z;showLoc(z);}
+    if(!egg&&me.y>=37){egg=true;say('',[`Just quiet meadow down here.`,`ALAM TOWN is back the other way: head north ↑`]);return true;}}
+  return false;}
+function update(dt){
+  if(st==='jump'){updateJump(dt);return;}
+  if(st!=='walk')return;
+  if(!me.moving){const w=wantDir();if(!w||!startStep(w))me.runN=0;}
+  if(me.moving){let ms=stepMs();me.t+=dt/ms;
+    while(me.moving&&me.t>=1){const left=(me.t-1)*ms;me.moving=false;me.fx=me.x;me.fy=me.y;me.t=0;me.runN++;
+      if(arrived())break;const w=wantDir();
+      if(st==='walk'&&w&&startStep(w)){ms=stepMs();me.t=left/ms;}else me.runN=0;}}}
+function interact(){if(st==='dlg'){next();return;}if(st==='jump'){jumpPress();return;}if(st!=='walk'||me.moving)return;const[dx,dy]=DIRS[me.dir],x=me.x+dx,y=me.y+dy;
+  const n=NPC.find(n=>n.x===x&&n.y===y);if(n){n.face=OPP[me.dir];say(n.name,n.lines(player));return;}
+  if(interior&&interior.id==='lab'){const c=CAPS.find(c=>c.x===x&&c.y===y);if(c){fade(()=>openCrystal(c.i));return;}}
+  if(interior&&interior.id==='home'&&at(x,y)===FRIDGE){fade(INTERIOR.home);return;}
+  if(!interior){const k=PROJ.find(k=>k.x===x&&k.y===y);if(k){fade(()=>openProject(k.i));return;}
+    const t=at(x,y);
+    if(t===HELIPAD){boardHeli();return;}
+    if(t===BOARD){fade(contactCard);return;}
+    if(t===MAILBOX){say('',[`MAILBOX — Fahadbin Alam\nfma52@drexel.edu · 856-870-7528`]);return;}
+    if(t===FNT){say('',[`The fountain sparkles. A plaque reads:\n"Become the top 1% of the 1% by helping those get up there with you."`]);return;}
+    if(t===WAT){say('',[`A quiet pond. The water is perfectly clear.`]);return;}}
+  const s=SIGNS[x+','+y];if(s){say('',[s]);return;}
+  if(at(x,y)===DOOR){const b=BLD[bidx[y*W+x]];say('',[b.label]);}}
+function setNight(v){night=v;$('dn').textContent=night?'☀':'☾';}
+function setSmooth(v){smooth=v;document.body.classList.toggle('smooth',v);}
+function menuToggle(){if(st==='walk'&&!me.moving){lastFocus=document.activeElement;st='panel';const m=$('menu'),mi=(l,f)=>`<button class="mi" role="menuitem" type="button" onclick="${f}">${l}</button>`;m.style.display='block';document.body.classList.add('menuopen');
+  m.innerHTML=mi('RÉSUMÉ','openResume()')+mi('CONTACT CARD','contactCard()')+mi('THE 3 CRYSTALS','crystalPick()')+mi('PARACHUTE JUMP','closePanels();startJump()')+
+    `<a class="mi" role="menuitem" href="${F.linktree}" target="_blank" rel="noopener">LINKTREE ↗</a>`+
+    mi((night?'DAY':'NIGHT')+' MODE','setNight(!night);closePanels()')+mi((smooth?'PIXEL':'SMOOTH')+' GRAPHICS','setSmooth(!smooth);closePanels()')+mi('CLOSE','closePanels()');
+  if(!IS_TOUCH)m.querySelector('.mi').focus({preventScroll:true});}
+  else if(st==='panel'){closePanels();}}
+/* the résumé is one press away from anywhere: it closes a dialogue or the menu, and only pauses a parachute jump */
+function resumeNow(){if(st==='fade'||(st==='panel'&&$('entry').style.display==='flex'))return;
+  if(st==='dlg'){$('dlg').style.display='none';clearTimeout(tt);dcb=null;}$('menu').style.display='none';document.body.classList.remove('menuopen');openResume();}
+$('dn').addEventListener('click',e=>{e.stopPropagation();setNight(!night);$('dn').blur();});
+$('rbtn').addEventListener('click',e=>{e.stopPropagation();$('rbtn').blur();resumeNow();});
+
+/* ═════════ INPUT ═════════ */
+const KEYDIR={ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
+const held=[];let joyDir=null,padDir=null;
+const wantDir=()=>held.length?held[held.length-1]:(joyDir||padDir);
+addEventListener('keydown',e=>{
+  const tg=e.target,onCtl=tg&&tg.closest&&tg.closest('button,a,input');
+  if(onCtl&&(e.key==='Enter'||e.key===' '))return;                    // let focused buttons, links and inputs work natively
+  if(tg&&tg.id==='name')return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(st==='title'){if(e.key==='r'||e.key==='R')openResume();else if(e.key==='Enter')start();return;}
+  if(st==='panel'||st==='fade'){if(e.key==='Escape'&&st==='panel')closePanels();return;}   // arrows scroll the panel
+  const d=KEYDIR[e.key];
+  if(d){e.preventDefault();if(!e.repeat){const i=held.indexOf(d);if(i>=0)held.splice(i,1);held.push(d);
+      if(st==='walk'&&!me.moving)me.dir=d;}                              // a quick tap always turns you, even toward a wall
+    return;}
+  if(e.key===' ')e.preventDefault();
+  if(e.repeat)return;
+  if(e.key==='Enter'||e.key==='z'||e.key==='Z'||e.key===' ')interact();
+  else if(e.key==='Escape'||e.key==='x'||e.key==='X')menuToggle();
+  else if(e.key==='r'||e.key==='R')resumeNow();
+  else if(e.key==='n'||e.key==='N'){if(st==='walk')setNight(!night);}});
+addEventListener('keyup',e=>{const d=KEYDIR[e.key];if(d){const i=held.indexOf(d);if(i>=0)held.splice(i,1);}});
+addEventListener('blur',()=>{held.length=0;joyDir=null;});
+
+/* mode 'jump' = start by parachuting in from the airfield instead of walking up the road */
+function start(mode){if(started)return;started=true;player=($('name').value.trim()||'FRIEND').toUpperCase().slice(0,8);$('name').blur();$('title').style.display='none';document.body.classList.remove('titled');
+  $('hud').classList.add('on');st='walk';if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  if(mode==='jump'){startJump();return;}
+  introShown=true;showLoc('SOUTH ROAD');
+  setTimeout(()=>{if(st==='walk')say('',[`Welcome, ${player}! This road leads to ALAM TOWN, home of FAHADBIN ALAM.`,`${howTo()}\nThe town is straight ahead ↑`,`Short on time? The RÉSUMÉ button at the top right skips the game. Or pick PARACHUTE JUMP in the menu and drop into town the way FAHADBIN did with the 82nd AIRBORNE.`]);},450);}
+$('go').onclick=()=>start();$('para').onclick=()=>start('jump');$('skip').onclick=openResume;
+$('name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();start();}});
+
+/* ═════════ SCREEN FIT — whole-number pixel scale, 240×160 view (about 12 tiles across on a phone held upright) ═════════ */
+if(IS_TOUCH)document.body.classList.add('touch');
+const cv=$('c'),ctx=cv.getContext('2d');let VW=240,VH=160,ZS=4;
+const buf=mkc(VW,VH),bx=buf.getContext('2d',{willReadFrequently:true});
+function fit(){
+  const vw=innerWidth,vh=innerHeight,dpr=window.devicePixelRatio||1,portrait=vh>vw,wrap=$('wrap');let aw,ah;
+  document.body.classList.toggle('land',IS_TOUCH&&!portrait);
+  if(IS_TOUCH&&portrait){const dw=Math.floor(vw*dpr+1e-6);ZS=Math.max(1,Math.round(dw/190));        // ≈12 tiles across, whole-number pixels, full width
+    VW=Math.floor(dw/ZS)&~1;VH=16*Math.max(9,Math.min(13,Math.floor((vh-196)*dpr/ZS/16)));}
+  else{if(IS_TOUCH){aw=vw-8;ah=vh-8;}else{aw=vw-24;ah=vh-76;}
+    VW=240;VH=160;ZS=Math.max(1,Math.floor(Math.min(aw/VW,ah/VH)*dpr+1e-6));if(!IS_TOUCH)ZS=Math.min(ZS,Math.ceil(5*dpr));}
+  const w=VW*ZS/dpr,h=VH*ZS/dpr;
+  wrap.style.width=w+'px';wrap.style.height=h+'px';wrap.style.borderRadius=IS_TOUCH?'0':'';
+  cv.width=VW*ZS;cv.height=VH*ZS;buf.width=VW;buf.height=VH;
+  wrap.style.fontSize=Math.max(10,Math.min(16,w/60))+'px';
+  wrap.style.left=wrap.style.top='0px';const r=wrap.getBoundingClientRect();          // snap the frame to whole device pixels
+  wrap.style.left=(Math.round(r.left*dpr)/dpr-r.left)+'px';wrap.style.top=(Math.round(r.top*dpr)/dpr-r.top)+'px';
+}
+addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,200));fit();
+
+/* ═════════ TOUCH JOYSTICK ═════════ */
+const joy=$('joy'),knob=$('knob');let jid=null;
+function jset(cx,cy){const r=joy.getBoundingClientRect();let dx=cx-(r.left+r.width/2),dy=cy-(r.top+r.height/2);
+  const max=r.width/2-18,d=Math.hypot(dx,dy);if(d>max){dx*=max/d;dy*=max/d;}
+  knob.style.transform=`translate(${dx}px,${dy}px)`;
+  joyDir=d>r.width*0.16?(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')):null;}
+function jend(e){if(e&&e.pointerId!==jid)return;jid=null;joy.classList.remove('on');knob.style.transform='';joyDir=null;}
+joy.addEventListener('pointerdown',e=>{e.preventDefault();jid=e.pointerId;try{joy.setPointerCapture(jid);}catch(_){}joy.classList.add('on');jset(e.clientX,e.clientY);});
+joy.addEventListener('pointermove',e=>{if(e.pointerId===jid){e.preventDefault();jset(e.clientX,e.clientY);}});
+joy.addEventListener('pointerup',jend);joy.addEventListener('pointercancel',jend);joy.addEventListener('lostpointercapture',jend);
+document.querySelectorAll('.ab [data-k]').forEach(el=>{
+  el.addEventListener('pointerdown',e=>{e.preventDefault();if(!started)return;el.classList.add('on');if(el.dataset.k==='a')interact();else menuToggle();});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>el.addEventListener(t,()=>el.classList.remove('on')));});
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#ctl'))e.preventDefault();});
+cv.addEventListener('pointerdown',()=>{if(st==='jump')jumpPress();});
+
+/* ═════════ GAMEPAD ═════════ */
+let gpPrev={};
+function pollPad(){const pads=navigator.getGamepads?navigator.getGamepads():[];let p=null;for(const g of pads)if(g){p=g;break;}
+  if(!p){padDir=null;return;}
+  const ax=p.axes[0]||0,ay=p.axes[1]||0,b=i=>!!(p.buttons[i]&&p.buttons[i].pressed);
+  padDir=(ay<-.5||b(12))?'up':(ay>.5||b(13))?'down':(ax<-.5||b(14))?'left':(ax>.5||b(15))?'right':null;
+  const A=b(0),B=b(1),S=b(9);
+  if(st==='title'){if((A||S)&&!gpPrev.A&&!gpPrev.S)start();}
+  else{if(A&&!gpPrev.A)interact();if((B&&!gpPrev.B)||(S&&!gpPrev.S))menuToggle();}
+  gpPrev={A,B,S};}
+
+/* ═════════ RENDER ═════════ */
+let LABELS=[];
+function drawChar(g,kind,dir,pose,px,py){g.drawImage(charArt(kind,dir,pose),px,py-CH_UP);}
+function bubble(g,x,y){Q(g,x+1,y,6,1,'#383848');Q(g,x,y+1,8,6,'#383848');Q(g,x+1,y+7,6,1,'#383848');Q(g,x+1,y+1,6,6,'#f8f8f8');Q(g,x+3,y+8,2,1,'#383848');Q(g,x+3,y+2,2,3,'#e03040');Q(g,x+3,y+6,2,1,'#e03040');}
+function drawScene(g,cx,cy,vw,vh,ppx,ppy,live){
+  g.fillStyle=interior?'#101018':'#000';g.fillRect(0,0,vw,vh);
+  const fr2=Math.floor(anim/480)%2,idle=live&&st==='walk'&&!me.moving,near=(x,y)=>idle&&Math.abs(x-me.x)+Math.abs(y-me.y)===1,
+    front=(x,y)=>idle&&x===me.x+DIRS[me.dir][0]&&y===me.y+DIRS[me.dir][1],above=y=>(Math.min(y,me.y))*TS-cy;
+  const c0=Math.floor(cx/TS),c1=Math.floor((cx+vw-1)/TS),r0=Math.floor(cy/TS),r1=Math.floor((cy+vh-1)/TS);
+  for(let y=r0;y<=r1;y++)for(let x=c0;x<=c1;x++){if(interior&&(x<0||y<0||x>=W||y>=H))continue;
+    g.drawImage(tileArt(at(x,y),x,y,fr2),x*TS-cx,y*TS-cy);}
+  const ents=[];
+  if(!interior){
+    let ax0=c0-2;if(!(ax0&1))ax0--;let ay0=r0-2;if(ay0&1)ay0--;
+    for(let ay=ay0;ay<=r1+1;ay+=2)for(let ax=ax0;ax<=c1;ax+=2)if(treeBlock(ax,ay))ents.push({k:(ay+2)*TS,d:()=>g.drawImage(treeArt(),ax*TS-cx,(ay-1)*TS-cy)});
+    BLD.forEach(b=>{if(b.x2<c0-1||b.x>c1+1||b.y2<r0-1||b.y>r1+1)return;ents.push({k:(b.y+b.h)*TS-1,d:()=>g.drawImage(buildingArt(b),b.x*TS-cx,b.y*TS-BHEAD-cy)});});
+    ents.push({k:(FOUNT.y+2)*TS-2,d:()=>g.drawImage(fountainArt(Math.floor(anim/320)%3),FOUNT.x*TS-cx,FOUNT.y*TS-cy)});
+    PROJ.forEach(k=>{if(front(k.x,k.y))LABELS.push([KIOSKS[k.i].n,k.x*TS+8-cx,above(k.y)-(k.y>me.y?4:2)]);});
+    if(live&&st==='walk'&&!me.moving){const b=BLD.find(b=>b.dx===me.x&&b.dy+1===me.y);if(b)LABELS.push([b.label,b.dx*TS+8-cx,b.dy*TS-4-cy]);}
+    if(heliOnPad()&&PAD.x<=c1+1&&PAD.x+PAD.n>=c0-1){ents.push({k:(PAD.y+PAD.n)*TS-1,d:()=>drawParked(g,cx,cy)});
+      if(idle&&at(me.x+DIRS[me.dir][0],me.y+DIRS[me.dir][1])===HELIPAD&&HELI.st==='parked')LABELS.push(['BOARD THE HELICOPTER',PADC.x-cx,PAD.y*TS-3-cy]);}
+  }else if(interior.id==='lab'){
+    // the three crystals hover over the table; a collected one is dimmed and ticked
+    CAPS.forEach(cp=>{const X=cp.x*TS-cx,Y=cp.y*TS-cy,done=got.has(cp.i),bob=REDUCED?0:Math.round(Math.sin(anim/400+cp.x)*1.2);
+      ents.push({k:(cp.y+1)*TS+1,d:()=>{Q(g,X+4,Y+6,8,2,'rgba(0,0,0,.2)');Q(g,X+5,Y+5,6,4,'rgba(0,0,0,.2)');
+        g.drawImage(crystalArt(CRYSTALS[cp.i].c,done),X+2,Y-10+bob);
+        if(!done&&!REDUCED&&Math.floor(anim/230+cp.x*3)%5===0){const sx=X+3+(cp.x*5)%9,sy=Y-9+bob+(cp.x*3)%6;Q(g,sx,sy-1,1,3,'#ffffff');Q(g,sx-1,sy,3,1,'#ffffff');}}});
+      if(front(cp.x,cp.y))LABELS.push([CRYSTALS[cp.i].n,X+8,Y-12]);});
+  }
+  NPC.forEach(n=>{if(live&&!n.face&&Math.random()<0.003)n.idle=['down','left','right','down'][Math.floor(Math.random()*4)];
+    ents.push({k:(n.y+1)*TS,d:()=>{drawChar(g,n.s,n.face||n.idle||n.dir,0,n.x*TS-cx,n.y*TS-cy);
+      if(near(n.x,n.y))bubble(g,n.x*TS+4-cx,n.y*TS-13-cy+(Math.floor(anim/300)%2));}});});
+  const pose=me.moving&&me.t<.5?(me.step?1:2):0;
+  if(!J)ents.push({k:ppy+TS,d:()=>drawChar(g,'player',me.dir,pose,ppx-cx,ppy-cy)});
+  ents.sort((a,b)=>a.k-b.k).forEach(e=>e.d());
+  // meadow plants cover the feet
+  if(!interior&&!J){const tg=()=>tileArt(TALL,0,0,0);[[me.x,me.y],[me.fx,me.fy]].forEach(([tx,ty],i)=>{if((i===0||me.moving)&&at(tx,ty)===TALL)g.drawImage(tg(),0,10,16,6,tx*TS-cx,ty*TS+10-cy,16,6);});}
+  if(!interior)drawAir(g,cx,cy,vw,vh);
+}
+function label(t,ax,ay){const s=ZS,fs=Math.max(9,Math.round(6.5*s));ctx.font='600 '+fs+'px "Pixelify Sans",ui-monospace,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  const tw=Math.ceil(ctx.measureText(t).width)+4*s,h=fs+3*s;let x=Math.round(ax*s-tw/2),y=Math.round(ay*s-h);
+  x=Math.max(2*s,Math.min(VW*s-tw-2*s,x));y=Math.max(2*s,y);
+  ctx.fillStyle='#383848';ctx.fillRect(x-s,y-s,tw+2*s,h+2*s);ctx.fillStyle='#f8f8f8';ctx.fillRect(x,y,tw,h);ctx.fillStyle='#484848';ctx.fillText(t,x+tw/2,y+h/2+s*.4);}
+
+/* Optional smooth look (menu → SMOOTH GRAPHICS): edge-aware 2× smoothing (EPX) run on the finished frame — twice on a
+   computer, once on a phone to stay light — so stair-steps round into curves, plus a soft vignette.
+   Off by default: the game is drawn as crisp pixels. */
+let SM=null,VIG=null,VIGK='';
+function epx(s,w,h,d){const W2=w*2;
+  for(let y=0;y<h;y++){const r=y*w,u=y>0?r-w:r,n=y<h-1?r+w:r,o=2*y*W2;
+    for(let x=0;x<w;x++){const P=s[r+x],A=s[u+x],B=x<w-1?s[r+x+1]:P,C=x>0?s[r+x-1]:P,D=s[n+x],i=o+2*x;
+      d[i]=(C===A&&C!==D&&A!==B)?A:P;d[i+1]=(A===B&&A!==C&&B!==D)?B:P;
+      d[i+W2]=(D===C&&D!==B&&C!==A)?C:P;d[i+W2+1]=(B===D&&B!==A&&D!==C)?D:P;}}}
+function smoothFrame(){const w=VW,h=VH,two=!IS_TOUCH,k=two?4:2;
+  if(!SM||SM.w!==w||SM.h!==h){const c=mkc(w*k,h*k),g=c.getContext('2d'),id=g.createImageData(w*k,h*k);
+    SM={w,h,c,g,id,out:new Uint32Array(id.data.buffer),mid:two?new Uint32Array(w*2*h*2):null};}
+  const src=new Uint32Array(bx.getImageData(0,0,w,h).data.buffer);
+  if(two){epx(src,w,h,SM.mid);epx(SM.mid,w*2,h*2,SM.out);}else epx(src,w,h,SM.out);
+  SM.g.putImageData(SM.id,0,0);return SM.c;}
+function vignette(){const k=cv.width+'x'+cv.height+(night&&!interior?'n':'d');if(VIGK!==k){VIGK=k;VIG=mkc(cv.width,cv.height);const v=VIG.getContext('2d'),w=cv.width,h=cv.height;
+    const gr=v.createRadialGradient(w/2,h*.45,Math.min(w,h)*.35,w/2,h*.5,Math.max(w,h)*.75);gr.addColorStop(0,'rgba(8,10,28,0)');gr.addColorStop(1,night&&!interior?'rgba(8,10,28,.5)':'rgba(8,10,28,.26)');
+    v.fillStyle=gr;v.fillRect(0,0,w,h);}
+  return VIG;}
+
+function camera(ppx,ppy){let cx=ppx+8-VW/2,cy=ppy+8-VH/2;
+  if(interior){const mw=W*TS,mh=H*TS;cx=mw<=VW?Math.round((mw-VW)/2):Math.max(0,Math.min(mw-VW,cx));cy=mh<=VH?Math.round((mh-VH)/2):Math.max(0,Math.min(mh-VH,cy));}
+  return[cx,cy];}
+function loop(ts){const dt=Math.min(50,(ts-lastT)||16);lastT=ts;anim+=dt;pollPad();update(dt);tickHeli(dt);
+  LIGHT=(night&&!interior)?'n':'d';
+  const k=me.moving?Math.min(1,me.t):0,ppx=Math.round((me.fx+(me.x-me.fx)*k)*TS),ppy=Math.round((me.fy+(me.y-me.fy)*k)*TS);
+  const[cx,cy]=J?jumpCam():camera(ppx,ppy);LABELS=[];
+  drawScene(bx,cx,cy,VW,VH,ppx,ppy,true);
+  if(smooth){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(smoothFrame(),0,0,cv.width,cv.height);ctx.drawImage(vignette(),0,0);}
+  else{ctx.imageSmoothingEnabled=false;ctx.drawImage(buf,0,0,cv.width,cv.height);}
+  LABELS.forEach(l=>label(l[0],l[1],l[2]));
+  requestAnimationFrame(loop);}
+if(!IS_TOUCH)setTimeout(()=>{if(st==='title')$('go').focus({preventScroll:true});},100);
+/* …/artifact-link#resume opens the text résumé directly */
+const hashResume=()=>{if(location.hash==='#resume'&&!(st==='panel'&&$('entry').style.display==='flex')){if(started)resumeNow();else openResume();}};
+addEventListener('hashchange',hashResume);hashResume();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
