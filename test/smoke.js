@@ -3,6 +3,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const { pathToFileURL } = require('url');
+const fs = require('fs');
 const URL = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
 
 let failed = 0;
@@ -24,6 +25,9 @@ const check = (ok, what, got) => { console.log((ok ? '  ok    ' : '  FAIL  ') + 
   await page.keyboard.press('r'); await page.waitForTimeout(200);
   const resume = await page.evaluate(() => $('entry-b').innerText);
   check(/RÉSUMÉ/.test((await state()).panel) && /Muslimo/.test(resume) && /82nd Airborne Division/.test(resume) && /Drexel University/.test(resume), 'R shows the text résumé before the game starts');
+  const pdf = await page.evaluate(() => ({ file: F.resumeFile, onGitHub: F.resumeOnGitHub, button: document.querySelector('#entry-b .btnrow a').getAttribute('href') }));
+  check(fs.existsSync(path.join(__dirname, '..', pdf.file)) && pdf.onGitHub.endsWith('/' + pdf.file) && pdf.button === pdf.onGitHub,
+    'the RÉSUMÉ (PDF) button points at the PDF kept in this repository', pdf);
   await page.keyboard.press('Escape'); await page.waitForTimeout(150);
 
   await page.click('#go'); await page.waitForTimeout(700);

@@ -6,9 +6,12 @@ const F={name:'FAHADBIN',email:'fma52@drexel.edu',linktree:'https://linktr.ee/fa
   nonprofit:'https://one-world-relief.org',book:'https://www.amazon.com/Ivory-Fahadbin-Mihad-Alam/dp/B0B9QM23FH',
   discord:'https://discord.gg/mmMQe7vq',phone:'tel:+18568707528',
   muslimo:'https://github.com/Fahadbin-Alam/Muslimo',sahabah:'https://github.com/Fahadbin-Alam/Roblox-Islamic-Game',
-  /* No hosted résumé PDF yet: the résumé-file button points at Linktree. Put a PDF URL here to switch every such button to it. */
-  resumePdf:''};
-const RESUME_LINK=F.resumePdf?['DOWNLOAD RÉSUMÉ (PDF)',F.resumePdf,'green']:['RÉSUMÉ · LINKTREE',F.linktree,'green'];
+  /* The résumé PDF sits next to the game in the GitHub repository. On GitHub Pages the game links to that file
+     directly; anywhere else (the Claude-hosted copy, a lone downloaded index.html) it links to the same file on GitHub. */
+  resumeFile:'Fahadbin_Alam_Resume.pdf',
+  resumeOnGitHub:'https://github.com/Fahadbin-Alam/Personal-Website/blob/main/Fahadbin_Alam_Resume.pdf'};
+F.resumePdf=/\.github\.io$/i.test(location.hostname)?F.resumeFile:F.resumeOnGitHub;
+const RESUME_LINK=F.resumePdf?['RÉSUMÉ (PDF)',F.resumePdf,'green']:['RÉSUMÉ · LINKTREE',F.linktree,'green'];
 
 /* Résumé bullets, kept word for word */
 const R={

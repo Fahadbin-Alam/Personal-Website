@@ -67,25 +67,28 @@ const moves=a=>`<div class="moves">${a.map(([m,d])=>`<div class="mv">${esc(m)}<s
 function showEntry(h,cls,html){$('entry-h').className='ph '+cls;$('entry-h').innerHTML=h;$('entry-b').innerHTML=html;openPanel('entry');$('entry-b').scrollTop=0;}
 
 /* The whole résumé as readable text (the picture above it is only a thumbnail on a phone) */
-function resumeText(){const ent=(t,when,sub,bl)=>`<div class="rt"><b>${esc(t)}</b><i>${esc(when)}</i></div>${sub?`<div class="st">${esc(sub)}</div>`:''}<ul>${bl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+/* The text résumé mirrors the PDF line for line: same order, same wording, same links */
+function resumeText(){const a=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`,nbs=t=>`<span class="nb">${t}</span>`,
+  ent=(t,when,sub,bl)=>`<div class="rt"><span>${t}</span><i>${esc(when)}</i></div>${sub?`<div class="st">${esc(sub)}</div>`:''}<ul>${bl.map(x=>`<li>${esc(x.replace(/\.$/,''))}</li>`).join('')}</ul>`;
   return `<div class="card rs">
-   <div class="rc"><b>Fahadbin Alam</b><br>856-870-7528 · fma52@drexel.edu<br>linkedin.com/in/fahadbin-alam- · github.com/Fahadbin-Alam<br><i>U.S. Army Veteran (Honorable Discharge) | Secret Clearance</i></div>
-   <h4>EDUCATION</h4><div class="rt"><b>Drexel University</b><i>Philadelphia, PA</i></div><div>B.S. Computer Science | Minors: Mathematics, Data Science, Electrical &amp; Computer Engineering</div>
+   <div class="rc"><b>Fahadbin Alam</b><br>${nbs('856-870-7528')} | ${nbs(`<a href="mailto:${F.email}">${F.email}</a>`)} | ${nbs(a(F.linkedin,'linkedin.com/in/fahadbin-alam-'))} | ${nbs(a(F.github,'github.com/Fahadbin-Alam'))}<br><i>U.S. Army Veteran (Honorable Discharge) | Secret Clearance</i></div>
+   <h4>EDUCATION</h4><div><b>Drexel University</b> | B.S. Computer Science | Minors: Mathematics, Data Science, Electrical &amp; Computer Engineering</div>
    <h4>TECHNICAL SKILLS</h4>${SKILLS.map(([k,v])=>`<div><b>${esc(k)}:</b> ${esc(v.replace(/ · /g,', '))}</div>`).join('')}
    <h4>TECHNICAL PROJECTS</h4>
-   ${ent('Muslimo — Full-Stack Islamic Learning Platform','April 2026 – Present',KIOSKS[0].stack,R.muslimo)}
-   ${ent('Path of the Sahabah — Roblox Educational Game','April 2026',KIOSKS[1].stack,R.sahabah)}
+   ${ent(`<b>${a(F.muslimo,'Muslimo')} — Full-Stack Islamic Learning Platform</b>`,'April 2026 – Present',KIOSKS[0].stack,R.muslimo)}
+   ${ent(`<b>${a(F.sahabah,'Path of the Sahabah')} — Roblox Educational Game</b>`,'April 2026',KIOSKS[1].stack,R.sahabah)}
    <h4>PROFESSIONAL EXPERIENCE</h4>
-   ${ent('One World Relief | Founder & Developer','March 2026','',R.owr)}
-   ${ent('Microsoft Software & Systems Academy (MSSA) | Cloud Application Development Program','June – December 2025','',R.mssa)}
-   ${ent('U.S. Army, 82nd Airborne Division','June 2020 – June 2025','Communications Systems Specialist (Network Administrator), Sergeant | Army Commendation Medal',R.army)}
-   ${ent('Airbnb Host | Operations Automation, North Carolina','2019 – 2023','',R.airbnb)}
+   ${ent(`<b>${a(F.nonprofit,'One World Relief')} | Founder &amp; Developer</b>`,'March 2026','',R.owr)}
+   ${ent(`<b>Microsoft Software &amp; Systems Academy (MSSA)</b> | Cloud Application Development Program`,'June – December 2025','',R.mssa)}
+   ${ent(`<b>U.S. Army, 82nd Airborne Division</b>`,'June 2020 – June 2025','Communications Systems Specialist (Network Administrator), Sergeant | Army Commendation Medal',R.army)}
+   ${ent(`<b>Airbnb Host</b> | Operations Automation, North Carolina`,'2019 – 2023','',R.airbnb)}
    <h4>CERTIFICATIONS</h4><div>Cisco CCNA | CompTIA Security+ | CompTIA Network+ | CompTIA A+</div></div>`;}
 /* The three crystals collected in the Workshop (also reachable from the menu) */
 const got=new Set();let allDone=false;
 const CCLS=['purple','blue','green'];
 function mark(i){got.add(i);$('prog').innerHTML=`<b>◆</b> <span><i>${got.size}</i>/3</span>`;$('prog').setAttribute('aria-label',`Crystals collected: ${got.size} of 3`);}
-const crystalBody=i=>{const p=CRYSTALS[i];return `<div class="img">${IMG[i]()}</div><div class="card flavor">${esc(p.f)}</div>`+
+const crystalBody=i=>{const p=CRYSTALS[i],pic=i===1?`<a class="img" href="${F.resumePdf}" target="_blank" rel="noopener" aria-label="Open the résumé PDF in a new tab">${IMG[i]()}</a>`:`<div class="img">${IMG[i]()}</div>`;
+  return `${pic}<div class="card flavor">${esc(p.f)}</div>`+
   (i===1?`<div class="btnrow">${lk(p.links)}</div>${resumeText()}`:`${bars(p.s)}<div class="btnrow">${lk(p.links)}</div>`);};
 function openCrystal(i){const p=CRYSTALS[i];mark(i);showEntry(`<span>${p.n}</span><small>COLLECTED ${got.size} / 3</small>`,CCLS[i],crystalBody(i)+back('◀ CLOSE'));}
 function crystalPick(){showEntry(`<span>WHERE TO START?</span><small>THE WORKSHOP</small>`,'',
