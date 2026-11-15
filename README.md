@@ -5,6 +5,9 @@ or board the helicopter at the airfield and parachute in, the way he did with th
 
 ![Four phone screens: the start screen, the helicopter flight over town, the parachute, and the Workshop](preview.png)
 
+The résumé itself is here too: [Fahadbin_Alam_Resume.pdf](Fahadbin_Alam_Resume.pdf). The game's text résumé
+matches it word for word, and the **RÉSUMÉ (PDF)** button in the game opens it.
+
 ## Play
 
 Open `index.html` in any browser. It is one self-contained file: nothing to install and no server needed.
@@ -57,7 +60,8 @@ The source is in `src/`, split by job. `build.sh` joins the parts in order into 
 | `70_game.js` | State, movement, input, screen fit and rendering |
 | `99_tail.html` | Closing tags |
 
-To change the résumé, edit `src/05_data.js` and the text résumé in `src/60_content.js`, then run `./build.sh`.
+To change the résumé, replace `Fahadbin_Alam_Resume.pdf`, edit `src/05_data.js` and the text résumé in
+`src/60_content.js` to match, then run `./build.sh`.
 
 ## Test
 
